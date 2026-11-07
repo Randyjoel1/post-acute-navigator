@@ -695,6 +695,9 @@
   .reason-other textarea { font: inherit; font-size: 16px; line-height: 24px; padding: 10px 12px; border: 1px solid var(--border-default-focus); border-radius: 8px; resize: none; color: var(--text-default-default); background: var(--surface-default-default); }
   .reason-other textarea::placeholder { color: var(--text-default-placeholder); }
   .reason-other textarea:focus-visible { outline: 2px solid var(--border-primary-focus); outline-offset: 2px; }
+  .name-field { display: flex; flex-direction: column; gap: 8px; }
+  .name-field input { height: 48px; padding: 0 12px; font: inherit; font-size: 16px; line-height: 24px; border: 1px solid var(--border-default-focus); border-radius: 8px; color: var(--text-default-default); background: var(--surface-default-default); }
+  .name-field input:focus-visible { outline: 2px solid var(--border-primary-focus); outline-offset: 2px; }
   .reason-hint { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-default-caption); }
   .slide.disabled { background: var(--surface-disabled); border-color: var(--border-disabled); }
   .slide.disabled .slide-label { color: var(--text-disabled-default); }
@@ -917,13 +920,30 @@
     </div>
   </section>
 
+  <!-- Preferred name (not designed in Figma yet) -->
+  <section class="screen" data-screen="name" data-title="What should we call you?" data-placeholder>
+    <header class="appbar center"><span class="appbar-title">Post-Acute Navigator</span></header>
+    <form class="content" id="name-form" novalidate>
+      <div class="stack-8">
+        <h1 class="h-hero">What should we call you?</h1>
+        <p class="body-md">This is how we’ll greet you in the app.</p>
+      </div>
+      <div class="name-field">
+        <label class="label-md" for="name-input">First name</label>
+        <input id="name-input" type="text" autocomplete="given-name" autocapitalize="words" spellcheck="false" maxlength="30" aria-describedby="name-hint">
+        <p class="reason-hint" id="name-hint">You can change it anytime in Account Settings.</p>
+      </div>
+      <button class="btn btn-filled" id="name-continue" type="submit" disabled>Continue</button>
+    </form>
+  </section>
+
   <!-- 07 Recovery Tour Welcome (214:3798) -->
   <section class="screen" data-screen="tour-welcome" data-title="Tour welcome">
     <header class="appbar center"><span class="appbar-title">Post-Acute Navigator</span></header>
     <div class="content space-between">
       <div class="content" style="padding:0;flex:none">
         <div class="stack-8">
-          <h1 class="h-hero">Hi, Martin.<br>Let’s take recovery one step at a time.</h1>
+          <h1 class="h-hero">Hi, <span data-bind="name">Martin</span>.<br>Let’s take recovery one step at a time.</h1>
           <p class="body-md">Get guidance to support your recovery, understand what to expect, and feel more confident about each next step.</p>
         </div>
         <button class="btn btn-filled" data-go="tour-1">Take a Quick Tour</button>
@@ -1092,7 +1112,7 @@
     </header>
     <div class="content">
       <div class="stack-8">
-        <h1 class="h-hero">Good morning, Martin</h1>
+        <h1 class="h-hero">Good morning, <span data-bind="name">Martin</span></h1>
         <div>
           <p class="h5" style="font-weight:500;line-height:32px">Recovery Day 3</p>
           <p class="body-md">Total Knee Arthroplasty</p>
@@ -1281,7 +1301,7 @@
     <nav class="drawer" aria-label="Main menu" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
       <div class="stack-8">
         <h2 class="h4" id="drawer-title" tabindex="-1">Menu</h2>
-        <p class="body-md">Here for you, Martin.<br>Let’s find what you need.</p>
+        <p class="body-md">Here for you, <span data-bind="name">Martin</span>.<br>Let’s find what you need.</p>
       </div>
       <div class="menu-card">
         <button class="menu-item feature" data-menu="care-team">
@@ -1426,8 +1446,8 @@
     </header>
     <div class="content">
       <div class="card"><div class="row" style="gap:12px">
-        <span class="avatar" aria-hidden="true">M</span>
-        <div class="stack-4" style="flex:1"><p class="label-md">Martin</p><p class="body-md">Patient at <span data-bind="hospital">Bayview General Hospital</span></p></div>
+        <span class="avatar" aria-hidden="true" data-bind="initial">M</span>
+        <div class="stack-4" style="flex:1"><p class="label-md" data-bind="name">Martin</p><p class="body-md">Patient at <span data-bind="hospital">Bayview General Hospital</span></p></div>
       </div></div>
       <p class="eyebrow">Profile</p>
       <div class="card list-card">
@@ -1575,8 +1595,27 @@
   document.getElementById("deny-access").addEventListener("click", denied);
   document.getElementById("denied-close").addEventListener("click", () => banner.hidden = true);
 
+  // ---- Preferred name ----
+  const nameInput = document.getElementById("name-input");
+  const nameContinue = document.getElementById("name-continue");
+  function setName(name) {
+    document.querySelectorAll('[data-bind="name"]').forEach(n => n.textContent = name);
+    document.querySelectorAll('[data-bind="initial"]').forEach(n => n.textContent = name.charAt(0).toUpperCase());
+  }
+  nameInput.addEventListener("input", () => { nameContinue.disabled = !nameInput.value.trim(); });
+  document.getElementById("name-form").addEventListener("submit", e => {
+    e.preventDefault();
+    let name = nameInput.value.trim().replace(/\s+/g, " ");
+    if (!name) return;
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    setName(name);
+    state.stack = [];                   // the tour is the new root
+    show("tour-welcome");
+  });
+
   // ---- Per-screen enter hooks ----
   const onEnter = {
+    name() { nameInput.value = ""; nameContinue.disabled = true; setTimeout(() => nameInput.focus(), 50); },
     search() { setTimeout(() => input.focus(), 50); renderResults(); },
     scan() { scanner.classList.remove("success"); },
     redirect() { banner.hidden = true; },
@@ -1593,8 +1632,8 @@
       }, 600 + i * 550)));
       timers.push(setTimeout(() => {
         state.returning = true;
-        state.stack = [];               // onboarding complete: tour is the new root
-        show("tour-welcome");
+        state.stack = [];               // onboarding complete: the name step is the new root
+        show("name");
       }, 600 + items.length * 550 + 500));
     },
   };
