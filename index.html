@@ -32,6 +32,7 @@
     --border-warning-default: #a64500;
     --border-primary-subtle-hover: #edecfc;
     --border-disabled: #eeeded;
+    --icon-default-default: #363434;
     --icon-default-secondary: #464444;
 
     --text-default-default: #363434;
@@ -146,7 +147,8 @@
   .icon-btn.spacer { visibility: hidden; pointer-events: none; }
 
   /* ---- Content ---- */
-  .content { display: flex; flex-direction: column; gap: 24px; padding: 12px; flex: 1; }
+  .content { display: flex; flex-direction: column; gap: 24px; padding: 12px 12px 40px; flex: 1; }
+  .card-icon { display: block; flex-shrink: 0; color: var(--icon-default-default); }
   .content.space-between { justify-content: space-between; }
   .content.centered { justify-content: center; }
   .stack-8 { display: flex; flex-direction: column; gap: 8px; }
@@ -1000,21 +1002,21 @@
         <p class="h5">Total Knee Arthroplasty</p>
       </div>
       <div class="card">
-        <div class="stack-4"><p class="label-md">Health Reading Log</p><p class="body-md">Sterile dressing inspection &amp; photograph upload</p></div>
+        <div class="stack-4"><svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 14l2 2 4-4M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/></svg><p class="label-md">Health Check-In</p><p class="body-md">Sterile dressing inspection &amp; photograph upload</p></div>
         <hr>
-        <div class="stack-4"><p class="label-md">Medication Scheduling</p><p class="body-md">Review the medications in your hospital care plan.</p></div>
+        <div class="stack-4"><svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"/></svg><p class="label-md">Medication Scheduling</p><p class="body-md">Review the medications in your hospital care plan.</p></div>
         <hr>
-        <div class="stack-4"><p class="label-md">Follow-Up Appointments</p><p class="body-md">Keep track of all your follow-up appointments</p></div>
+        <div class="stack-4"><svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1M16 2v3M21 7.338V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2.338M3 9h5.859M8 2v3M22 16a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg><p class="label-md">Follow-Up Appointments</p><p class="body-md">Keep track of all your follow-up appointments</p></div>
         <hr>
-        <div class="stack-4"><p class="label-md">Your Care Team</p><p class="body-md">Keep track of all your follow-up appointments</p></div>
+        <div class="stack-4"><svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M16 3.128a4 4 0 0 1 0 7.744M22 21v-2a4 4 0 0 0-3-3.87M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg><p class="label-md">Your Care Team</p><p class="body-md">Keep track of all your follow-up appointments</p></div>
       </div>
-      <button class="btn btn-filled" data-go="tour-2">Next: Health Reading Log</button>
+      <button class="btn btn-filled" data-go="tour-2">Next: Health Check-In</button>
       <button class="btn btn-outline" data-go="dashboard">Skip to Dashboard</button>
     </div>
   </section>
 
-  <!-- 09 Tour: Health Reading Log (265:3373) -->
-  <section class="screen" data-screen="tour-2" data-title="Tour 2 · Health reading log">
+  <!-- 09 Tour: Health Check-In (265:3373) -->
+  <section class="screen" data-screen="tour-2" data-title="Tour 2 · Health check-in">
     <header class="appbar tour">
       <button class="icon-btn" data-back aria-label="Back"><img src="assets/tour-back.svg" width="24" height="24" alt=""></button>
       <span class="appbar-title">Post-Acute Navigator</span>
@@ -1023,16 +1025,13 @@
     <div class="content">
       <div class="tour-top"><div class="dots" data-step="2" aria-label="Step 2 of 5"></div><button class="btn btn-text small" data-logout>Log Out</button></div>
       <div class="stack-8">
-        <h1 class="h-hero">Health Reading Log</h1>
+        <h1 class="h-hero">Health Check-In</h1>
         <p class="body-md">Sterile dressing inspection &amp; photograph upload.</p>
       </div>
       <div class="card">
-        <div class="row" style="gap:8px">
-          <img src="assets/square-text.svg" width="40" height="40" alt="">
-          <img src="assets/camera.svg" width="40" height="40" alt="">
-        </div>
         <div class="stack-4">
-          <p class="label-md">Log or Check-In with a Photo</p>
+          <svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 14l2 2 4-4M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/></svg>
+          <p class="label-md">Health Check-In</p>
           <p class="body-md">Log your temperature, pain, and drain out, and photograph your incision. If something looks off, your care team will contact you.</p>
         </div>
       </div>
@@ -1089,7 +1088,7 @@
       </div>
       <div class="card">
         <div class="stack-8">
-          <img src="assets/calendar.svg" width="40" height="40" alt="">
+          <svg class="card-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 14v2.2l1.6 1M16 2v3M21 7.338V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2.338M3 9h5.859M8 2v3M22 16a6 6 0 1 1-12 0 6 6 0 0 1 12 0Z"/></svg>
           <div class="stack-4"><p class="label-md">Next Follow-Up</p><p class="body-lg">October 29, 2026</p></div>
         </div>
         <hr>
