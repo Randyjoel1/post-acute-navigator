@@ -250,6 +250,7 @@
     display: grid; place-items: center;
     font-size: 12px; line-height: 15px; color: #000;
   }
+  img.hero-img { display: block; height: auto; object-fit: cover; }
   .epic-tile {
     width: 32px; height: 32px; border-radius: 8px; background: var(--design-epic);
     display: grid; place-items: center; flex-shrink: 0;
@@ -865,7 +866,7 @@
       <span class="icon-btn spacer" aria-hidden="true"><img src="assets/header-right.svg" width="24" height="24" alt=""></span>
     </header>
     <div class="content">
-      <div class="hero-img">Hospital Image / Logo</div>
+      <img class="hero-img" src="assets/hospital-bayview.jpg" width="800" height="800" alt="The hospital’s main entrance, with palm trees and the bay behind it">
       <h1 class="h-hero" data-bind="hospital">Bayview General Hospital</h1>
       <div class="row" style="gap:12px">
         <span class="epic-tile"><img src="assets/epic.svg" width="18" height="18" alt=""></span>
