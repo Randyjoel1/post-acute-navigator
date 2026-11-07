@@ -26,6 +26,9 @@
     --text-warning-default: #a64500;
     --text-disabled-default: #9f9b9b;
     --border-success-default: #0a5015;
+    --surface-success-subtle: #e1f2e3;
+    --border-success-subtle: #e1f2e3;
+    --icon-success-default: #0a5015;
     --border-warning-default: #a64500;
     --border-primary-subtle-hover: #edecfc;
     --border-disabled: #eeeded;
@@ -713,6 +716,24 @@
     opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 10; white-space: nowrap;
   }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .success-toast {
+    position: absolute; top: 38px; left: 12px; right: 12px; z-index: 20;
+    display: flex; align-items: center; gap: 8px; padding: 16px;
+    background: var(--surface-success-subtle); border: 1px solid var(--border-success-default); border-radius: 8px;
+    color: var(--icon-success-default);
+    opacity: 0; visibility: hidden; transform: translateY(-12px);
+    transition: opacity .2s, transform .2s, visibility 0s .2s;
+  }
+  .success-toast.show { opacity: 1; visibility: visible; transform: none; transition: opacity .2s, transform .2s; }
+  .success-toast .label-md { flex: 1; color: var(--text-success-default); }
+  .success-toast .icon-btn { color: var(--icon-success-default); }
+  .success-toast .icon-btn:focus-visible { outline: 2px solid var(--border-success-default); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .success-toast, .success-toast.show { transition: none; transform: none; } }
+
+  /* ---- Dose chip: Take → Taken (499:2178 → 341:374) ---- */
+  .dose-chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; }
+  .dose-chip.taken { background: var(--surface-success-subtle); border-color: var(--border-success-subtle); color: var(--text-success-default); cursor: default; }
+  .dose-chip.taken svg { color: var(--icon-success-default); }
 
   /* ---- Prototype panel ---- */
   .panel {
@@ -1103,7 +1124,7 @@
     </div>
   </section>
 
-  <!-- Dashboard (not designed in Figma) -->
+  <!-- Dashboard (499:2178; dose taken 341:374) -->
   <section class="screen" data-screen="dashboard" data-title="Patient dashboard">
     <header class="appbar">
       <button class="icon-btn menu-btn" id="menu-open" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><img src="assets/menu.svg" width="24" height="24" alt=""></button>
@@ -1119,15 +1140,22 @@
         </div>
       </div>
       <div class="card">
-        <div class="row-8"><img src="assets/clock.svg" width="24" height="24" alt=""><div class="stack-4"><p class="label-md">Next dose · 8:00 PM</p><p class="body-md">Acetaminophen (paracetamol) · With food</p></div></div>
-      </div>
-      <div class="card">
-        <div class="row"><img src="assets/camera.svg" width="40" height="40" alt=""><div class="stack-4" style="flex:1"><p class="label-md">Today’s health check-in</p><p class="body-md" id="dash-checkin-text">Vitals, an incision photo and redressing</p></div></div>
+        <div class="stack-4"><p class="label-md">Today’s Health Check-In</p><p class="body-md" id="dash-checkin-text">Vitals, an incision photo and redressing</p></div>
         <p class="status-line" id="dash-checkin-done" hidden>Completed today</p>
         <button class="btn btn-filled" data-go="checkin" id="dash-checkin-btn">Start Check-In</button>
       </div>
       <div class="card">
-        <div class="row"><img src="assets/calendar.svg" width="40" height="40" alt=""><div class="stack-4"><p class="label-md">Next follow-up</p><p class="body-md">October 29, 2026 · Dr. Jane Smith</p></div></div>
+        <div class="row-8" style="align-items:center"><img src="assets/clock.svg" width="24" height="24" alt=""><p class="label-md">Next Dose 8:00 PM</p></div>
+        <div class="stack-4">
+          <p class="body-md">Acetaminophen (paracetamol)</p>
+          <p class="label-md" style="color:var(--text-default-secondary)">With food · 2 of 2 today</p>
+        </div>
+        <button class="chip dose-chip" id="dose-take" aria-label="Take Acetaminophen">Take</button>
+      </div>
+      <div class="card">
+        <div class="stack-4"><p class="label-md">Next Follow-Up</p><p class="body-md">October 29, 2026</p></div>
+        <hr>
+        <div class="stack-4"><p class="label-md">Dr. Jane Smith</p><p class="body-md">Orthopedic Surgeon</p></div>
       </div>
       <button class="btn btn-outline" data-go="tour-1">Replay the Tour</button>
       <button class="btn btn-text" data-logout>Log Out</button>
@@ -1472,6 +1500,12 @@
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <!-- Success toast (341:374) -->
+  <div class="success-toast" id="success-toast">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+    <span class="label-md" id="success-toast-text" role="status" aria-live="polite"></span>
+    <button class="icon-btn" id="success-toast-close" aria-label="Dismiss"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
 </main>
 
 <aside class="panel" aria-label="Prototype controls">
@@ -1500,6 +1534,7 @@
     if (!back) { if (replace) state.stack.pop(); if (current !== name) state.stack.push(name); }
     const dw = document.getElementById("drawer");
     if (dw && !dw.hidden) { dw.classList.remove("open"); dw.hidden = true; document.getElementById("menu-open").setAttribute("aria-expanded", "false"); }
+    if (name !== current) document.getElementById("success-toast")?.classList.remove("show");
     screens.forEach(s => s.classList.remove("active", "back", "pushed", "unpushing"));
     const el = byName[name];
     el.classList.add("active");
@@ -2346,6 +2381,36 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
   }
 
+  // ---- Success toast (top of screen, dismissible) ----
+  const successToast = document.getElementById("success-toast");
+  let successTimer;
+  function showSuccess(msg) {
+    document.getElementById("success-toast-text").textContent = msg;
+    successToast.classList.add("show");
+    clearTimeout(successTimer); successTimer = setTimeout(hideSuccess, 5000);
+  }
+  function hideSuccess() { clearTimeout(successTimer); successToast.classList.remove("show"); }
+  document.getElementById("success-toast-close").addEventListener("click", hideSuccess);
+
+  // ---- Dashboard dose: Take → Taken ----
+  const doseChip = document.getElementById("dose-take");
+  const CHECK_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  doseChip.addEventListener("click", () => {
+    if (doseChip.classList.contains("taken")) return;
+    doseChip.classList.add("taken");
+    doseChip.innerHTML = `Taken${CHECK_SVG}`;
+    doseChip.setAttribute("aria-label", "Acetaminophen taken");
+    doseChip.setAttribute("aria-disabled", "true");
+    showSuccess("Acetaminophen Taken");
+  });
+  function resetDose() {
+    doseChip.classList.remove("taken");
+    doseChip.textContent = "Take";
+    doseChip.setAttribute("aria-label", "Take Acetaminophen");
+    doseChip.removeAttribute("aria-disabled");
+    hideSuccess();
+  }
+
   // ---- Prototype panel ----
   const list = document.getElementById("screen-list");
   screens.forEach(s => {
@@ -2365,7 +2430,7 @@
     const cur = state.stack[state.stack.length - 1];
     list.querySelectorAll("button").forEach(b => b.setAttribute("aria-current", b.dataset.jump === cur ? "true" : "false"));
   }
-  document.getElementById("restart").addEventListener("click", () => { state.returning = false; restart(); });
+  document.getElementById("restart").addEventListener("click", () => { state.returning = false; resetDose(); restart(); });
   document.getElementById("reset-checkin").addEventListener("click", () => {
     resetCheckin();
     state.stack = [];
