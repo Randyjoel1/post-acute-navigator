@@ -1,0 +1,2341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Post-Acute Navigator Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@100,400;100,500;100,600&display=swap" rel="stylesheet">
+<style>
+  /* ---- Healthcare Design System: Mapped tokens ---- */
+  :root {
+    --surface-default-page: #ffffff;
+    --surface-default-default: #ffffff;
+    --surface-default-default-hover: #f7f6f6;
+    --surface-default-secondary: #f7f6f6;
+    --surface-primary-default: #4f46e5;
+    --surface-primary-default-hover: #231ad3;
+    --surface-primary-subtle: #f6f6fe;
+    --surface-primary-subtle-hover: #edecfc;
+    --surface-default-pressed: #f7f6f6;
+    --surface-error-subtle: #f9eaea;
+    --surface-success-default: #0a5015;
+    --surface-disabled: #eeeded;
+    --text-success-default: #0a5015;
+    --text-warning-default: #a64500;
+    --text-disabled-default: #9f9b9b;
+    --border-success-default: #0a5015;
+    --border-warning-default: #a64500;
+    --border-primary-subtle-hover: #edecfc;
+    --border-disabled: #eeeded;
+    --icon-default-secondary: #464444;
+
+    --text-default-default: #363434;
+    --text-default-secondary: #555252;
+    --text-default-caption: #555252;
+    --text-default-placeholder: #9f9b9b;
+    --text-primary-default: #4f46e5;
+    --text-primary-default-hover: #231ad3;
+    --text-primary-on-color: #ffffff;
+    --text-primary-on-color-hover: #ffffff;
+    --text-error-default: #8b0b0b;
+    --text-on-color-default: #ffffff;
+
+    --border-default-default: #eeeded;
+    --border-default-default-hover: #d4d2d2;
+    --border-default-focus: #464444;
+    --border-primary-default: #4f46e5;
+    --border-primary-default-hover: #231ad3;
+    --border-primary-focus: #4f46e5bf;
+    --border-error-default: #8b0b0b;
+
+    --elevation-1: #eeeded;
+    --elevation-2: #d4d2d2;
+
+    /* Values used in the Figma screens that are not bound to a token */
+    --design-canvas: #fafafa;      /* screen background */
+    --design-muted: #6f797b;       /* "OR" divider, security footnote */
+    --design-body-alt: #3e484b;    /* hotline body copy */
+    --design-security-bg: #f0f3ff; /* HIPAA capsule */
+    --design-dot: #e9e9e9;         /* inactive carousel dot */
+    --design-epic: #b31422;        /* portal badge tile */
+    --design-hotline-border: rgba(190, 200, 203, .6);
+    --design-placeholder-img: #dedede;
+
+    /* Prototype chrome (outside the phone) */
+    --chrome-bg: #ecebf3;
+    --chrome-text: #363434;
+    --chrome-muted: #555252;
+    --chrome-panel: #ffffff;
+
+    --font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --shadow-1: 4px 4px 16px 0 var(--elevation-1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --chrome-bg: #1d1c22; --chrome-text: #f1f0f4; --chrome-muted: #b5b2b2; --chrome-panel: #2a2930; }
+  }
+  :root[data-theme="dark"] { --chrome-bg: #1d1c22; --chrome-text: #f1f0f4; --chrome-muted: #b5b2b2; --chrome-panel: #2a2930; }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    font-family: var(--font);
+    font-variation-settings: "wdth" 100;
+    background: var(--chrome-bg);
+    color: var(--chrome-text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 32px;
+    padding: 32px 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; }
+  img { display: block; }
+
+  /* ---- Phone frame ---- */
+  .phone {
+    width: 390px;
+    height: 844px;
+    max-height: calc(100vh - 64px);
+    min-height: 640px;
+    background: var(--design-canvas);
+    border-radius: 44px;
+    box-shadow: 0 0 0 10px #18171c, 0 24px 60px rgba(0,0,0,.25);
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  @media (max-width: 760px) {
+    body { padding: 0; display: block; background: var(--design-canvas); }
+    .phone { width: 100%; height: 100dvh; max-height: none; min-height: 0; border-radius: 0; box-shadow: none; }
+    .panel { display: none; }
+  }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    overflow-y: auto; overscroll-behavior: contain;
+    padding-top: 40px;
+    color: var(--text-default-default);
+    background: var(--design-canvas);
+  }
+  .screen.active { display: flex; animation: enter .22s ease-out; }
+  .screen.back.active { animation-name: enter-back; }
+  @keyframes enter { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+  @keyframes enter-back { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .screen.active { animation: none; } }
+
+  /* ---- Top app bar ---- */
+  .appbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; flex-shrink: 0; }
+  .appbar.center { justify-content: center; }
+  .appbar.tour { padding: 0 16px; }
+  .appbar-title { font-weight: 500; font-size: 16px; line-height: 24px; flex: 1; text-align: center; }
+  .appbar.center .appbar-title { flex: none; }
+  .icon-btn {
+    width: 32px; height: 32px; display: grid; place-items: center;
+    border: 0; background: transparent; border-radius: 100px; padding: 4px; cursor: pointer; flex-shrink: 0;
+  }
+  .icon-btn:hover { background: var(--surface-default-default-hover); }
+  .icon-btn.spacer { visibility: hidden; pointer-events: none; }
+
+  /* ---- Content ---- */
+  .content { display: flex; flex-direction: column; gap: 24px; padding: 12px; flex: 1; }
+  .content.space-between { justify-content: space-between; }
+  .content.centered { justify-content: center; }
+  .stack-8 { display: flex; flex-direction: column; gap: 8px; }
+  .stack-4 { display: flex; flex-direction: column; gap: 4px; }
+
+  .h-hero { margin: 0; font-weight: 500; font-size: 40px; line-height: 52px; letter-spacing: -0.75px; color: var(--text-default-default); }
+  .body-md { margin: 0; font-size: 16px; line-height: 24px; color: var(--text-default-secondary); }
+  .body-lg { margin: 0; font-size: 20px; line-height: 32px; color: var(--text-default-secondary); }
+  .label-md { margin: 0; font-weight: 600; font-size: 16px; line-height: 24px; color: var(--text-default-default); }
+  .title-md { margin: 0; font-weight: 500; font-size: 16px; line-height: 24px; letter-spacing: .15px; color: var(--text-default-default); }
+  .h5 { margin: 0; font-weight: 400; font-size: 24px; line-height: 40px; color: var(--text-default-default); }
+  .semibold { font-weight: 600; }
+
+  /* ---- Buttons ---- */
+  .btn {
+    height: 48px; width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 16px; border-radius: 100px;
+    font-weight: 600; font-size: 16px; line-height: 24px; text-transform: capitalize;
+    border: 1px solid var(--border-primary-default);
+    cursor: pointer; flex-shrink: 0;
+    transition: background-color .12s, border-color .12s, color .12s;
+  }
+  .btn-filled { background: var(--surface-primary-default); color: var(--text-primary-on-color); }
+  .btn-filled:hover { background: var(--surface-primary-default-hover); border-color: var(--border-primary-default-hover); color: var(--text-primary-on-color-hover); }
+  .btn-outline { background: transparent; color: var(--text-primary-default); }
+  .btn-outline:hover { background: var(--surface-primary-subtle-hover); border-color: var(--border-primary-default-hover); color: var(--text-primary-default-hover); }
+  .btn-text { background: transparent; border-color: transparent; color: var(--text-primary-default); }
+  .btn-text:hover { color: var(--text-primary-default-hover); background: var(--surface-primary-subtle); }
+  .btn-text.small { height: auto; width: auto; padding: 4px 8px; }
+  .btn:focus-visible, .icon-btn:focus-visible, .result:focus-visible, .search:focus-within {
+    outline: 2px solid var(--border-primary-focus); outline-offset: 2px;
+  }
+
+  /* ---- Divider ---- */
+  .divider { position: relative; display: flex; align-items: center; padding: 8px 0; }
+  .divider::before { content: ""; flex: 1; border-top: 1px solid var(--border-default-default); }
+  .divider span {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    background: var(--design-canvas); padding: 0 12px;
+    font-size: 12px; line-height: 16px; letter-spacing: .6px; text-transform: uppercase; color: var(--design-muted);
+  }
+
+  /* ---- Search field ---- */
+  .search {
+    height: 50px; display: flex; align-items: center; gap: 8px;
+    padding: 0 8px 0 16px; border-radius: 80px;
+    background: var(--surface-default-default);
+    border: 1px solid var(--border-default-default);
+    filter: drop-shadow(4px 4px 8px var(--elevation-1));
+    transition: border-color .12s;
+  }
+  .search:hover { border-color: var(--border-default-default-hover); }
+  .search input {
+    flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+    font: inherit; font-size: 16px; line-height: 24px; color: var(--text-default-default);
+  }
+  .search input::placeholder { color: var(--text-default-placeholder); }
+  .search .icon-btn[hidden] { display: none; }
+  .search-trigger { cursor: text; text-align: left; width: 100%; }
+  .search-trigger span { flex: 1; color: var(--text-default-placeholder); font-size: 16px; line-height: 24px; }
+
+  /* ---- Results ---- */
+  .results { display: flex; flex-direction: column; gap: 16px; }
+  .result {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    background: var(--surface-default-default);
+    border: 1px solid var(--border-default-default);
+    border-radius: 8px; padding: 8px;
+    font-size: 16px; line-height: 24px;
+    transition: background-color .12s, border-color .12s;
+  }
+  .result:hover { background: var(--surface-default-default-hover); border-color: var(--border-default-default-hover); }
+  .result strong { display: block; font-weight: 600; color: var(--text-default-default); }
+  .result span { color: var(--text-default-secondary); }
+  .result mark { background: var(--surface-primary-subtle-hover); color: inherit; border-radius: 2px; }
+
+  /* ---- Cards ---- */
+  .notice {
+    background: var(--surface-default-default);
+    border: 1px solid var(--design-hotline-border);
+    border-radius: 12px; padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .notice p.alt { margin: 0; font-size: 15px; line-height: 24px; color: var(--design-body-alt); }
+  .card {
+    background: var(--surface-default-default);
+    border: 1px solid var(--border-default-default);
+    border-radius: 8px; padding: 12px;
+    box-shadow: var(--shadow-1);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .card hr { margin: 0; border: 0; border-top: 1px solid var(--border-default-default); }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row-8 { display: flex; align-items: flex-start; gap: 8px; }
+
+  /* ---- Hospital screen ---- */
+  .hero-img {
+    width: 100%; aspect-ratio: 1 / 1; border-radius: 16px;
+    background: var(--design-placeholder-img);
+    display: grid; place-items: center;
+    font-size: 12px; line-height: 15px; color: #000;
+  }
+  .epic-tile {
+    width: 32px; height: 32px; border-radius: 8px; background: var(--design-epic);
+    display: grid; place-items: center; flex-shrink: 0;
+    box-shadow: 0 1px 1px rgba(0,0,0,.05);
+  }
+  .security {
+    background: var(--design-security-bg); border: 1px solid var(--border-default-default);
+    border-radius: 8px; padding: 9px 13px; display: flex; align-items: center; gap: 8px;
+    font-size: 12px; line-height: 15px; color: var(--design-body-alt);
+  }
+  .footnote { margin: 0; font-size: 14px; line-height: 20px; letter-spacing: .44px; color: var(--design-muted); }
+
+  /* ---- Error banner ---- */
+  .banner {
+    position: absolute; left: 12px; right: 12px; top: 38px; z-index: 5;
+    background: var(--surface-error-subtle); border: 1px solid var(--border-error-default);
+    border-radius: 8px; padding: 16px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+    filter: drop-shadow(4px 4px 8px var(--elevation-1));
+  }
+  .banner p { margin: 0; font-weight: 600; font-size: 16px; line-height: 24px; color: var(--text-error-default); }
+  .banner .icon-btn { margin: -4px; }
+  .banner[hidden] { display: none; }
+
+  /* ---- Permissions ---- */
+  .perm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 24px; }
+  .perm-list li { font-size: 16px; line-height: 24px; color: var(--text-default-secondary); }
+  .bullets { display: flex; flex-direction: column; gap: 8px; }
+  .bullets .item { display: flex; align-items: flex-start; gap: 8px; }
+  .bullets .item img { margin-top: 7px; flex-shrink: 0; }
+
+  /* ---- Carousel dots ---- */
+  .tour-top { display: flex; justify-content: space-between; align-items: center; }
+  .dots { display: flex; }
+  .dots i { display: block; padding: 4px; }
+  .dots i::before { content: ""; display: block; width: 8px; height: 8px; border-radius: 8px; background: var(--design-dot); transition: width .2s; }
+  .dots i.on::before { width: 24px; background: var(--surface-primary-default); }
+
+  /* ---- Spinner / loading ---- */
+  .spinner {
+    width: 48px; height: 48px; margin: 0 auto; border-radius: 50%;
+    border: 4px solid var(--surface-primary-subtle-hover); border-top-color: var(--surface-primary-default);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.5s; } }
+  .progress { height: 6px; border-radius: 6px; background: var(--surface-primary-subtle-hover); overflow: hidden; }
+  .progress b { display: block; height: 100%; width: 0; background: var(--surface-primary-default); border-radius: 6px; transition: width .4s ease; }
+  .checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; text-align: left; }
+  .checklist li { display: flex; align-items: center; gap: 10px; font-size: 16px; line-height: 24px; color: var(--text-default-placeholder); transition: color .2s; }
+  .checklist li::before { content: ""; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-default-default-hover); flex-shrink: 0; transition: all .2s; }
+  .checklist li.done { color: var(--text-default-default); }
+  .checklist li.done::before { border-color: var(--surface-primary-default); background: var(--surface-primary-default) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 12px no-repeat; }
+
+  /* ---- Placeholder (undesigned) screens ---- */
+  .proto-flag {
+    align-self: flex-start;
+    font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+    color: var(--text-primary-default); background: var(--surface-primary-subtle);
+    border: 1px dashed var(--border-primary-default); border-radius: 100px; padding: 4px 10px;
+  }
+  .scanner {
+    position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 16px; overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #3b3a44, #17161c);
+    display: grid; place-items: center;
+  }
+  .scanner .frame { width: 62%; aspect-ratio: 1; position: relative; }
+  .scanner .frame::before, .scanner .frame::after {
+    content: ""; position: absolute; inset: 0; border-radius: 16px;
+    border: 4px solid #fff;
+    -webkit-mask: conic-gradient(#000 0 0) top left / 28% 28% no-repeat, conic-gradient(#000 0 0) top right / 28% 28% no-repeat, conic-gradient(#000 0 0) bottom left / 28% 28% no-repeat, conic-gradient(#000 0 0) bottom right / 28% 28% no-repeat;
+            mask: conic-gradient(#000 0 0) top left / 28% 28% no-repeat, conic-gradient(#000 0 0) top right / 28% 28% no-repeat, conic-gradient(#000 0 0) bottom left / 28% 28% no-repeat, conic-gradient(#000 0 0) bottom right / 28% 28% no-repeat;
+  }
+  .scanner .line { position: absolute; left: 8%; right: 8%; height: 2px; background: var(--surface-primary-default); box-shadow: 0 0 12px 2px var(--surface-primary-default); animation: scan 2s ease-in-out infinite alternate; }
+  @keyframes scan { from { top: 10%; } to { top: 88%; } }
+  .scanner .found { position: absolute; inset: 0; display: none; place-items: center; background: rgba(79,70,229,.88); color: #fff; font-weight: 600; font-size: 18px; text-align: center; padding: 24px; }
+  .scanner.success .found { display: grid; }
+  .scanner.success .line { display: none; }
+
+  .dash-greeting { display: flex; justify-content: space-between; align-items: center; }
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+
+  /* ---- Health check-in ---- */
+  .h-section { margin: 0; font-weight: 500; font-size: 24px; line-height: 40px; color: var(--text-default-default); display: flex; align-items: center; gap: 8px; }
+  .h4 { margin: 0; font-weight: 500; font-size: 32px; line-height: 48px; color: var(--text-default-default); }
+  .section-check { display: none; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-success-default); flex-shrink: 0; }
+  .section-check::after { content: ""; display: block; width: 100%; height: 100%; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 14px no-repeat; }
+  .done .section-check { display: block; }
+  .vital { gap: 12px; align-items: stretch; }
+  .vital-head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .chips { display: flex; gap: 12px; }
+  .chip {
+    height: 36px; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+    background: var(--surface-default-default); border: 1px solid var(--border-default-default);
+    font: inherit; font-weight: 600; font-size: 14px; line-height: 20px; color: var(--text-default-default);
+  }
+  .chip:hover { border-color: var(--border-default-default-hover); }
+  .chip[aria-pressed="true"] { background: var(--surface-default-pressed); border-color: var(--border-primary-default); color: var(--text-primary-default); }
+  .chip:focus-visible, .stepper button:focus-visible, .vital-value input:focus-visible, .slide-thumb:focus-visible, .check-row input:focus-visible + span, .choice:focus-visible { outline: 2px solid var(--border-primary-focus); outline-offset: 2px; }
+  .stepper { display: flex; align-items: center; justify-content: space-between; }
+  .stepper button {
+    width: 48px; height: 48px; border-radius: 100px; display: grid; place-items: center; cursor: pointer;
+    background: transparent; border: 1px solid var(--border-primary-default); flex-shrink: 0;
+    transition: background-color .12s, border-color .12s;
+  }
+  .stepper button:hover { background: var(--surface-primary-subtle-hover); border-color: var(--border-primary-default-hover); }
+  .stepper button:disabled { background: var(--surface-disabled); border-color: var(--border-disabled); cursor: not-allowed; }
+  .stepper button:disabled img { opacity: .4; filter: grayscale(1); }
+  .vital-value { display: flex; flex-direction: column; align-items: center; }
+  .vital-value input {
+    width: 150px; text-align: center; border: 0; background: transparent; border-radius: 8px;
+    font: inherit; font-size: 40px; line-height: 60px; color: var(--text-default-default);
+    -moz-appearance: textfield;
+  }
+  .vital-value input::-webkit-outer-spin-button, .vital-value input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .vital-value input:hover { background: var(--surface-default-default-hover); }
+  .vital-unit, .vital-range { margin: 0; font-size: 16px; line-height: 24px; color: var(--text-default-secondary); text-align: center; }
+  .vital-alert {
+    display: none; gap: 8px; align-items: flex-start; padding: 8px 12px; border-radius: 8px;
+    border: 1px solid var(--border-warning-default); background: var(--surface-default-default);
+    font-size: 14px; line-height: 20px; color: var(--text-warning-default);
+  }
+  .vital-alert img { flex-shrink: 0; margin-top: 2px; }
+  .vital.out-of-range .vital-alert { display: flex; }
+  .vital.out-of-range { border-color: var(--border-warning-default); }
+
+  .photos { display: flex; flex-direction: column; gap: 8px; }
+  .photo-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .photo-row + .photo-row { border-top: 1px solid var(--border-default-default); padding-top: 8px; }
+  .photo-thumb { width: 48px; height: 48px; border-radius: 8px; background: var(--design-placeholder-img); flex-shrink: 0; position: relative; overflow: hidden; }
+  .photo-thumb::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 30% 30%, #f3d9cf, #c99a8b 60%, #a87a6c); }
+  .photo-meta { flex: 1; font-size: 14px; line-height: 20px; color: var(--text-default-caption); }
+  .icon-btn-outline {
+    width: 40px; height: 40px; border-radius: 100px; border: 1px solid var(--border-primary-default);
+    background: transparent; display: grid; place-items: center; cursor: pointer; padding: 8px;
+  }
+  .icon-btn-outline:hover { background: var(--surface-primary-subtle-hover); }
+  .status-line { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 20px; color: var(--text-success-default); font-weight: 600; }
+  .status-line::before { content: ""; width: 18px; height: 18px; border-radius: 50%; background: var(--surface-success-default) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 11px no-repeat; }
+
+  /* ---- Slide to confirm ---- */
+  .slide {
+    position: relative; height: 58px; border-radius: 80px; padding: 4px; flex-shrink: 0;
+    background: var(--surface-primary-default); border: 1px solid var(--border-primary-default);
+    overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  .slide-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--surface-primary-default-hover); }
+  .slide-label {
+    position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+    font-weight: 600; font-size: 16px; line-height: 24px; color: var(--text-on-color-default);
+  }
+  .slide-thumb {
+    position: relative; z-index: 1; width: 48px; height: 48px; border-radius: 100px; cursor: grab;
+    background: var(--surface-default-default); border: 1px solid var(--border-primary-default);
+    display: grid; place-items: center; filter: drop-shadow(4px 4px 8px rgba(0,0,0,.25));
+  }
+  .slide-thumb:active { cursor: grabbing; }
+  .slide.snap .slide-thumb, .slide.snap .slide-fill { transition: transform .25s ease, width .25s ease; }
+  .slide.complete { background: var(--surface-success-default); border-color: var(--border-success-default); }
+  .slide.complete .slide-fill { background: var(--surface-success-default); }
+  .slide-hint { margin: -16px 0 0; text-align: center; font-size: 14px; line-height: 20px; color: var(--text-default-caption); }
+
+  /* ---- Bottom sheet ---- */
+  .sheet-backdrop { position: absolute; inset: 0; z-index: 20; background: rgba(23, 22, 28, .45); opacity: 0; transition: opacity .25s; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 21; height: calc(100% - 56px);
+    background: var(--surface-default-default); color: var(--text-default-default); border-radius: 24px 24px 0 0;
+    display: flex; flex-direction: column; transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 -8px 24px rgba(0,0,0,.12);
+  }
+  .sheet-wrap.open .sheet { transform: none; }
+  .sheet-wrap.open .sheet-backdrop { opacity: 1; }
+  .sheet-wrap[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .sheet, .sheet-backdrop { transition: none; } }
+  .sheet-grip { width: 40px; height: 4px; border-radius: 4px; background: var(--border-default-default-hover); margin: 8px auto 0; flex-shrink: 0; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px 0; flex-shrink: 0; }
+  .sheet-head .appbar-title { font-weight: 600; }
+  .sheet-progress { padding: 8px 16px 0; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+  .sheet-progress small { font-size: 14px; line-height: 20px; color: var(--text-default-caption); }
+  .sheet-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .sheet-body.enter-next { animation: page-next .28s ease-out; }
+  .sheet-body.enter-prev { animation: page-prev .28s ease-out; }
+  @keyframes page-next { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+  @keyframes page-prev { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+
+  /* ---- Step illustrations (prototype artwork, not from Figma) ---- */
+  .demo {
+    --skin: #f2d4c4; --skin-shade: #e6bba6; --incision: #b4594a;
+    flex-shrink: 0; height: 176px; border-radius: 16px; background: var(--surface-primary-subtle);
+    display: grid; place-items: center; overflow: hidden; position: relative;
+  }
+  .demo svg { width: 100%; height: 100%; }
+  .demo-caption {
+    position: absolute; left: 12px; top: 10px; padding: 2px 10px; border-radius: 100px;
+    background: var(--surface-default-default); font-size: 12px; line-height: 18px; font-weight: 600; color: var(--text-primary-default);
+  }
+  .demo .sup { transform-box: fill-box; transform-origin: center; animation: pop .45s cubic-bezier(.3,1.5,.6,1) backwards; animation-delay: calc(var(--d) * .12s); }
+  .demo .badge { opacity: 0; transform-box: fill-box; transform-origin: center; transform: scale(.4); transition: opacity .2s, transform .25s cubic-bezier(.3,1.6,.6,1); }
+  .demo .sup.got .badge { opacity: 1; transform: none; }
+  @keyframes pop { from { opacity: 0; transform: scale(.6); } }
+  .demo .rub-l { animation: rub-l 1.1s ease-in-out infinite alternate; }
+  .demo .rub-r { animation: rub-r 1.1s ease-in-out infinite alternate; }
+  @keyframes rub-l { to { transform: translate(10px, -4px); } }
+  @keyframes rub-r { to { transform: translate(-10px, 4px); } }
+  .demo .bubble { animation: rise 2.4s ease-in infinite; animation-delay: calc(var(--d) * .5s); opacity: 0; }
+  @keyframes rise { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: .9; } 100% { opacity: 0; transform: translateY(-46px); } }
+  .demo .drop { animation: fall 1s linear infinite; animation-delay: calc(var(--d) * .33s); }
+  @keyframes fall { from { transform: translateY(0); opacity: 1; } to { transform: translateY(34px); opacity: 0; } }
+  .demo .timer-ring { transition: stroke-dashoffset 1s linear; transform: rotate(-90deg); transform-box: fill-box; transform-origin: center; }
+  .demo .peel { transform-box: view-box; transform-origin: 228px 112px; animation: peel 3.6s ease-in-out infinite; }
+  @keyframes peel { 0%, 20% { transform: none; opacity: 1; } 60% { transform: rotate(-24deg) translate(-6px, -14px); opacity: 1; } 80% { transform: rotate(-34deg) translate(-20px, -40px); opacity: 0; } 100% { opacity: 0; } }
+  .demo .scan { animation: scan-x 3.2s ease-in-out infinite alternate; }
+  @keyframes scan-x { from { transform: translateX(-62px); } to { transform: translateX(62px); } }
+  .demo .dab { animation: dab 3.6s ease-in-out infinite; }
+  @keyframes dab {
+    0%, 100% { transform: translate(-56px, -18px); } 8% { transform: translate(-56px, 0); } 16% { transform: translate(-56px, -18px); }
+    33% { transform: translate(0, -18px); } 41% { transform: translate(0, 0); } 49% { transform: translate(0, -18px); }
+    66% { transform: translate(56px, -18px); } 74% { transform: translate(56px, 0); } 82% { transform: translate(56px, -18px); }
+  }
+  .demo .apply { animation: apply 5s ease-out infinite; }
+  @keyframes apply { 0% { transform: translateY(-70px); opacity: 0; } 20%, 92% { transform: none; opacity: 1; } 100% { opacity: 0; } }
+  .demo .tape { opacity: 0; animation: tape 5s ease-out infinite; animation-delay: calc(var(--d) * .3s); }
+  @keyframes tape { 0%, 30% { opacity: 0; } 38%, 90% { opacity: 1; } 100% { opacity: 0; } }
+  .demo .done-check { transform-box: fill-box; transform-origin: center; animation: pop .5s cubic-bezier(.3,1.6,.6,1) backwards; }
+  @media (prefers-reduced-motion: reduce) {
+    .demo *, .sheet-body.enter-next, .sheet-body.enter-prev { animation: none !important; }
+    .demo .tape { opacity: 1; }
+  }
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .check-grid .check-row { padding: 10px; gap: 10px; font-size: 14px; line-height: 20px; }
+  .sheet-actions { padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--border-default-default); flex-shrink: 0; }
+  .step-illus { width: 100%; height: 132px; border-radius: 16px; background: var(--surface-primary-subtle); display: grid; place-items: center; }
+  .step-title { margin: 0; font-weight: 500; font-size: 24px; line-height: 32px; color: var(--text-default-default); }
+  .step-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; line-height: 24px; color: var(--text-default-secondary); }
+  .check-row { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-default-default); border-radius: 8px; cursor: pointer; font-size: 16px; line-height: 24px; color: var(--text-default-default); }
+  .check-row:hover { border-color: var(--border-default-default-hover); }
+  .check-row input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .check-row > input + span { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border-default-focus); flex-shrink: 0; display: grid; place-items: center; }
+  .check-row input:checked + span { background: var(--surface-primary-default); border-color: var(--surface-primary-default); }
+  .check-row input:checked + span::after { content: ""; width: 12px; height: 12px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat; }
+  .check-row:has(input:checked) { border-color: var(--border-primary-default); background: var(--surface-primary-subtle); }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .choice {
+    height: 48px; border-radius: 100px; cursor: pointer; font: inherit; font-weight: 600; font-size: 16px;
+    border: 1px solid var(--border-default-default-hover); background: var(--surface-default-default); color: var(--text-default-default);
+  }
+  .choice:hover { background: var(--surface-default-default-hover); }
+  .choice[aria-pressed="true"] { border-color: var(--border-primary-default); background: var(--surface-primary-subtle); color: var(--text-primary-default); }
+  .callout { border-radius: 8px; padding: 12px; display: flex; gap: 10px; align-items: flex-start; font-size: 16px; line-height: 24px; }
+  .callout p { margin: 0; }
+  .callout > svg { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; }
+  .callout.warn { border: 1px solid var(--border-warning-default); color: var(--text-warning-default); background: var(--surface-default-default); }
+  .callout.error { border: 1px solid var(--border-error-default); color: var(--text-error-default); background: var(--surface-error-subtle); }
+  .callout.info { border: 1px solid var(--border-primary-subtle-hover); color: var(--text-default-secondary); background: var(--surface-primary-subtle); font-size: 14px; line-height: 20px; }
+  .btn:disabled { background: var(--surface-disabled); border-color: var(--border-disabled); color: var(--text-disabled-default); cursor: not-allowed; }
+
+  /* ---- Submitted (read-only) check-in ---- */
+  .submitted .stepper button, .submitted .chips, .submitted #take-photo, .submitted .photo-row .icon-btn-outline { display: none; }
+  .submitted .stepper { justify-content: center; }
+  .submitted .vital-value input { pointer-events: none; }
+  .sent-banner { display: none; }
+  .submitted .sent-banner { display: flex; }
+
+  /* ---- Check-in sent confirmation ---- */
+  .sent { align-items: center; justify-content: center; text-align: center; gap: 24px; padding: 24px; }
+  .sent-check { width: 144px; height: 144px; }
+  .sent-check .ring { stroke-dasharray: 402; stroke-dashoffset: 402; animation: draw .7s ease-out forwards; }
+  .sent-check .fill { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: grow .35s .55s cubic-bezier(.3,1.5,.6,1) forwards; }
+  .sent-check .tick { stroke-dasharray: 90; stroke-dashoffset: 90; animation: draw .4s .8s ease-out forwards; }
+  .sent-check .spark { transform-box: fill-box; transform-origin: center; opacity: 0; animation: spark .6s 1s ease-out forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes grow { to { transform: scale(1); } }
+  @keyframes spark { 0% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3); } }
+  .redirect-bar { width: 160px; height: 4px; border-radius: 4px; background: var(--surface-primary-subtle-hover); overflow: hidden; margin: 0 auto; }
+  .redirect-bar b { display: block; height: 100%; width: 0; background: var(--surface-primary-default); }
+  .redirect-bar.run b { width: 100%; transition: width 3.2s linear; }
+  @media (prefers-reduced-motion: reduce) {
+    .sent-check .ring, .sent-check .tick { animation: none; stroke-dashoffset: 0; }
+    .sent-check .fill { animation: none; transform: none; }
+  }
+
+  /* ---- Simulated camera app ---- */
+  .camera { position: absolute; inset: 0; z-index: 30; background: #000; color: #fff; display: flex; flex-direction: column; opacity: 0; transform: scale(.94); transition: opacity .25s, transform .25s; }
+  .camera.open { opacity: 1; transform: none; }
+  .camera[hidden] { display: none; }
+  .cam-top { height: 96px; padding: 40px 12px 0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .cam-top span { font-weight: 600; font-size: 16px; }
+  .cam-icon { width: 40px; height: 40px; border-radius: 100px; border: 0; background: rgba(255,255,255,.14); color: #fff; display: grid; place-items: center; cursor: pointer; }
+  .cam-icon:focus-visible, .shutter:focus-visible, .cam-text-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .viewfinder { position: relative; flex: 1; overflow: hidden; background: #111; }
+  .feed { position: absolute; inset: -6%; display: grid; place-items: center; opacity: 0; transition: opacity .5s; }
+  .camera.live .feed { opacity: 1; animation: sway 4s ease-in-out infinite; }
+  .camera.captured .feed { animation-play-state: paused; }
+  .feed svg { width: 100%; height: 100%; filter: saturate(1.1); }
+  @keyframes sway { 0%, 100% { transform: translate(0, 0) rotate(0); } 25% { transform: translate(6px, -4px) rotate(.6deg); } 50% { transform: translate(-4px, 5px) rotate(-.4deg); } 75% { transform: translate(-6px, -2px) rotate(.3deg); } }
+  .cam-booting { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; color: rgba(255,255,255,.7); transition: opacity .3s; }
+  .camera.live .cam-booting { opacity: 0; }
+  .guide { position: absolute; inset: 22% 10%; border-radius: 20px; }
+  .guide::before { content: ""; position: absolute; inset: 0; border-radius: 20px; border: 3px solid #fff;
+    -webkit-mask: conic-gradient(#000 0 0) top left / 22% 30% no-repeat, conic-gradient(#000 0 0) top right / 22% 30% no-repeat, conic-gradient(#000 0 0) bottom left / 22% 30% no-repeat, conic-gradient(#000 0 0) bottom right / 22% 30% no-repeat;
+            mask: conic-gradient(#000 0 0) top left / 22% 30% no-repeat, conic-gradient(#000 0 0) top right / 22% 30% no-repeat, conic-gradient(#000 0 0) bottom left / 22% 30% no-repeat, conic-gradient(#000 0 0) bottom right / 22% 30% no-repeat; }
+  .camera.captured .guide { display: none; }
+  .cam-tip { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); white-space: nowrap; background: rgba(0,0,0,.55); padding: 6px 12px; border-radius: 100px; font-size: 13px; line-height: 18px; }
+  .camera.captured .cam-tip { display: none; }
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .flash.go { animation: flash .45s ease-out; }
+  @keyframes flash { 0% { opacity: .95; } 100% { opacity: 0; } }
+  .cam-bottom { height: 150px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 28px 20px; }
+  .cam-bottom > * { flex: 1; display: flex; }
+  .cam-bottom > :nth-child(2) { justify-content: center; }
+  .cam-bottom > :nth-child(3) { justify-content: flex-end; }
+  .shutter { width: 74px; height: 74px; border-radius: 50%; border: 4px solid #fff; background: transparent; padding: 4px; cursor: pointer; }
+  .shutter::after { content: ""; display: block; width: 100%; height: 100%; border-radius: 50%; background: #fff; transition: transform .1s; }
+  .shutter:active::after { transform: scale(.88); }
+  .shutter:disabled { opacity: .4; cursor: default; }
+  .cam-text-btn { background: none; border: 0; color: #fff; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; padding: 8px; }
+  .cam-review { display: none; gap: 12px; padding: 0 16px 28px; height: 150px; align-items: center; flex-shrink: 0; }
+  .camera.captured .cam-bottom { display: none; }
+  .camera.captured .cam-review { display: flex; }
+  .cam-review .btn { flex: 1; }
+  .cam-review .btn-outline { color: #fff; border-color: #fff; }
+  .cam-review .btn-outline:hover { background: rgba(255,255,255,.12); color: #fff; }
+  .photo-thumb svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+  /* ---- Menu drawer (391:11253) ---- */
+  .drawer-wrap { position: absolute; inset: 0; z-index: 25; pointer-events: none; }
+  .drawer-wrap[hidden] { display: none; }
+  .drawer-scrim { position: absolute; inset: 0; background: rgba(37, 37, 37, .25); opacity: 0; transition: opacity .28s; pointer-events: auto; }
+  .drawer {
+    position: absolute; top: 0; bottom: 0; left: 0; width: 316px; max-width: 81%;
+    background: var(--surface-default-default); color: var(--text-default-default);
+    padding: 40px 12px 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto;
+    transform: translateX(-100%); transition: transform .28s cubic-bezier(.2,.8,.2,1); pointer-events: auto;
+  }
+  .drawer-wrap.open .drawer { transform: none; }
+  .drawer-wrap.open .drawer-scrim { opacity: 1; }
+  /* Push the page behind the drawer, as in the Figma frame */
+  .screen.pushed { transform: translateX(min(316px, 81%)); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+  .screen.unpushing { transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+  @media (prefers-reduced-motion: reduce) { .drawer, .drawer-scrim, .screen.pushed, .screen.unpushing { transition: none; } }
+  .drawer .h4 { line-height: 48px; }
+  .menu-card { background: var(--surface-default-default); border: 1px solid var(--border-default-default); border-radius: 8px; overflow: hidden; }
+  .menu-item {
+    width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; cursor: pointer;
+    background: var(--surface-default-default); border: 0; padding: 12px; font: inherit; color: inherit;
+    transition: background-color .12s;
+  }
+  .menu-item:hover { background: var(--surface-default-default-hover); }
+  .menu-item:focus-visible { outline: 2px solid var(--border-default-focus); outline-offset: -2px; }
+  .menu-item .stack-4 { flex: 1; min-width: 0; }
+  .menu-card hr { margin: 0 12px; border: 0; border-top: 1px solid var(--border-default-default); }
+  .menu-item.feature { flex-direction: column; align-items: stretch; gap: 10px; }
+  .menu-item.feature .row { gap: 10px; }
+
+  /* ---- Shared page bits ---- */
+  .eyebrow { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text-default-caption); }
+  .list-card { padding: 0; gap: 0; }
+  .list-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px; width: 100%; text-align: left;
+    background: transparent; border: 0; font: inherit; color: inherit;
+  }
+  button.list-row { cursor: pointer; }
+  button.list-row:hover { background: var(--surface-default-default-hover); }
+  button.list-row:focus-visible { outline: 2px solid var(--border-default-focus); outline-offset: -2px; }
+  .list-row + .list-row { border-top: 1px solid var(--border-default-default); }
+  .list-row .stack-4 { flex: 1; min-width: 0; }
+  .list-row .value { font-size: 16px; line-height: 24px; color: var(--text-default-secondary); text-align: right; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 100px;
+    font-size: 14px; line-height: 20px; font-weight: 600; border: 1px solid; white-space: nowrap;
+  }
+  .pill.ok { color: var(--text-success-default); border-color: var(--border-success-default); }
+  .pill.warn { color: var(--text-warning-default); border-color: var(--border-warning-default); }
+  .pill.missed { color: var(--text-default-secondary); border-color: var(--border-default-default-hover); }
+  .pill svg { flex-shrink: 0; }
+  .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-primary-subtle); display: grid; place-items: center; flex-shrink: 0; font-weight: 600; font-size: 20px; color: var(--text-primary-default); }
+
+  /* History */
+  .history-card { gap: 12px; }
+  .history-card summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .history-card summary::-webkit-details-marker { display: none; }
+  .history-card summary img { transition: transform .2s; }
+  .history-card[open] summary img { transform: rotate(90deg); }
+  .history-card summary:focus-visible { outline: 2px solid var(--border-default-focus); outline-offset: 4px; border-radius: 4px; }
+  .vitals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .vitals-grid div { background: var(--surface-default-secondary); border-radius: 8px; padding: 8px; }
+  .vitals-grid small { display: block; font-size: 12px; line-height: 16px; color: var(--text-default-caption); }
+  .vitals-grid b { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--text-default-default); }
+  .vitals-grid b.flag { color: var(--text-warning-default); display: inline-flex; align-items: center; gap: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .history-meta { margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: var(--text-default-secondary); }
+
+  /* Switch */
+  .switch { position: relative; width: 52px; height: 32px; flex-shrink: 0; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .switch span {
+    position: absolute; inset: 0; border-radius: 100px; background: var(--surface-default-secondary);
+    border: 2px solid var(--border-default-focus); transition: background-color .15s, border-color .15s;
+  }
+  .switch span::after {
+    content: ""; position: absolute; top: 50%; left: 6px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--icon-default-secondary); transform: translateY(-50%); transition: all .15s;
+  }
+  .switch input:checked + span { background: var(--surface-primary-default); border-color: var(--border-primary-default); }
+  .switch input:checked + span::after { left: 24px; width: 22px; height: 22px; background: var(--surface-default-default); }
+  .switch input:focus-visible + span { outline: 2px solid var(--border-primary-focus); outline-offset: 2px; }
+
+  /* ---- Empty vitals & missing-info dialog ---- */
+  .title-sm { margin: 0; font-weight: 500; font-size: 20px; line-height: 32px; color: var(--text-default-default); }
+  .vital-value input::placeholder { color: var(--text-default-default); opacity: 1; }
+  .vital.missing { border-color: var(--border-primary-default); box-shadow: 0 0 0 1px var(--border-primary-default); }
+  .slide-spinner { position: absolute; left: 50%; top: 50%; width: 32px; height: 32px; margin: -16px 0 0 -16px; display: none; animation: spin .9s linear infinite; }
+  .slide.loading { background: var(--surface-primary-subtle); }
+  .slide.loading .slide-fill, .slide.loading .slide-label { display: none; }
+  .slide.loading .slide-spinner { display: block; }
+  .slide.loading .slide-thumb { cursor: default; }
+  @media (prefers-reduced-motion: reduce) { .slide-spinner { animation-duration: 2.5s; } }
+  .modal-wrap { position: absolute; inset: 0; z-index: 26; display: grid; align-items: center; padding: 12px; }
+  .modal-wrap[hidden] { display: none; }
+  .modal-wrap .drawer-scrim { pointer-events: auto; }
+  .modal-wrap.open .drawer-scrim { opacity: 1; }
+  .modal { position: relative; gap: 16px; transform: translateY(12px); opacity: 0; transition: transform .22s ease-out, opacity .22s; }
+  .modal-wrap.open .modal { transform: none; opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .modal { transition: none; } }
+  .modal h2 { margin: 0; }
+  .modal { max-height: calc(100% - 24px); overflow-y: auto; }
+  .card.missing { border-color: var(--border-primary-default); box-shadow: 0 0 0 1px var(--border-primary-default); }
+  .reason { margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px; }
+  .reason legend { padding: 0; margin-bottom: 8px; display: flex; gap: 2px; }
+  .reason .req { color: var(--text-error-default); }
+  .modal.card { box-shadow: none; } /* Card elevated=false, per 423:1639 / 424:13175 */
+  .modal-close { align-self: flex-end; margin: -4px -4px -8px 0; }
+  .modal-step { display: flex; flex-direction: column; gap: 16px; }
+  .modal-step[hidden] { display: none; }
+  .modal-step.enter { animation: step-in .2s ease-out; }
+  @keyframes step-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .modal-step.enter { animation: none; } }
+  .reason legend { margin-bottom: 4px; }
+  .reason-options { display: flex; flex-direction: column; gap: 8px; }
+  .check-row.radio > input + span { border-radius: 50%; }
+  .check-row.radio .stack-4 { flex: 1; }
+  .check-row.radio input:checked + span::after { width: 10px; height: 10px; border-radius: 50%; background: var(--text-primary-on-color); }
+  .reason-sub { font-size: 14px; line-height: 20px; color: var(--text-default-caption); }
+  .reason-other { display: flex; flex-direction: column; gap: 8px; }
+  .reason-other[hidden] { display: none; }
+  .reason-other textarea { font: inherit; font-size: 16px; line-height: 24px; padding: 10px 12px; border: 1px solid var(--border-default-focus); border-radius: 8px; resize: none; color: var(--text-default-default); background: var(--surface-default-default); }
+  .reason-other textarea::placeholder { color: var(--text-default-placeholder); }
+  .reason-other textarea:focus-visible { outline: 2px solid var(--border-primary-focus); outline-offset: 2px; }
+  .reason-hint { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-default-caption); }
+  .slide.disabled { background: var(--surface-disabled); border-color: var(--border-disabled); }
+  .slide.disabled .slide-label { color: var(--text-disabled-default); }
+  .slide.disabled .slide-thumb { cursor: not-allowed; border-color: var(--border-disabled); filter: none; }
+  .slide.disabled .slide-thumb img { filter: grayscale(1); opacity: .45; }
+  .missing-list { margin: 0; padding-left: 24px; font-weight: 600; font-size: 16px; line-height: 24px; color: var(--text-default-secondary); }
+
+  /* ---- Toast ---- */
+  .toast {
+    position: absolute; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
+    background: var(--text-default-default); color: var(--text-on-color-default);
+    padding: 10px 16px; border-radius: 100px; font-size: 14px; line-height: 20px;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 10; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---- Prototype panel ---- */
+  .panel {
+    width: 280px; flex-shrink: 0; position: sticky; top: 32px;
+    background: var(--chrome-panel); color: var(--chrome-text);
+    border-radius: 16px; padding: 20px; font-size: 14px; line-height: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  }
+  .panel h2 { margin: 0 0 4px; font-size: 16px; line-height: 24px; font-weight: 600; }
+  .panel p { margin: 0 0 16px; color: var(--chrome-muted); }
+  .panel h3 { margin: 16px 0 6px; font-size: 12px; line-height: 16px; letter-spacing: .5px; text-transform: uppercase; color: var(--chrome-muted); font-weight: 600; }
+  .panel ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .panel ol button {
+    width: 100%; text-align: left; background: transparent; border: 0; color: inherit; cursor: pointer;
+    padding: 6px 8px; border-radius: 8px; font-size: 14px; line-height: 20px; display: flex; gap: 8px; align-items: center;
+  }
+  .panel ol button:hover { background: rgba(127,127,127,.12); }
+  .panel ol button[aria-current="true"] { background: var(--surface-primary-default); color: #fff; }
+  .panel ol button em { font-style: normal; font-size: 11px; opacity: .7; margin-left: auto; }
+  .panel .restart { margin-top: 16px; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<main class="phone" id="phone" aria-label="Post-Acute Navigator app prototype">
+
+  <!-- 01 Welcome & Hospital Selection (153:2242) -->
+  <section class="screen" data-screen="welcome" data-title="Welcome & hospital selection">
+    <header class="appbar center"><span class="appbar-title">Post-Acute Navigator</span></header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Welcome to your recovery journey</h1>
+        <p class="body-md">Connect your hospital portal to import your discharge instructions, medications, and care plan directly.</p>
+      </div>
+      <button class="btn btn-filled" data-go="scan"><img src="assets/scan.svg" width="24" height="24" alt="">Scan Hospital Code</button>
+      <div class="divider" aria-hidden="true"><span>or</span></div>
+      <div class="stack-8">
+        <p class="label-md" id="find-label">Find Your Hospital</p>
+        <button class="search search-trigger" data-go="search" aria-labelledby="find-label">
+          <img src="assets/search.svg" width="24" height="24" alt=""><span>Search Hospital</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01b Welcome Back & Portal Reconnect (220:3895) -->
+  <section class="screen" data-screen="welcome-back" data-title="Welcome back (returning patient)">
+    <header class="appbar center"><span class="appbar-title">Post-Acute Navigator</span></header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Welcome to your recovery journey</h1>
+        <p class="body-md">Connect your hospital portal to import your discharge instructions, medications, and care plan directly.</p>
+      </div>
+      <div>
+        <p class="title-md">Last Patient Portal Used</p>
+        <p class="body-md" data-bind="hospital">Bayview General Hospital</p>
+      </div>
+      <button class="btn btn-filled" data-go="redirect">Continue to Patient Portal<img src="assets/arrow-right.svg" width="24" height="24" alt=""></button>
+      <p class="body-md">Were you discharged from a different hospital?</p>
+      <button class="btn btn-outline" data-go="scan"><img src="assets/scan-outline.svg" width="24" height="24" alt="">Scan Hospital Code</button>
+      <div class="divider" aria-hidden="true"><span>or</span></div>
+      <div class="stack-8">
+        <p class="label-md" id="find-label-2">Find Your Hospital</p>
+        <button class="search search-trigger" data-go="search" aria-labelledby="find-label-2">
+          <img src="assets/search.svg" width="24" height="24" alt=""><span>Search Hospital</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 Hospital Search: results (160:2292) + no results (205:2668) -->
+  <section class="screen" data-screen="search" data-title="Hospital search">
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Find Your Hospital</span>
+      <span class="icon-btn spacer" aria-hidden="true"><img src="assets/header-right.svg" width="24" height="24" alt=""></span>
+    </header>
+    <div class="content">
+      <label class="search">
+        <img src="assets/search.svg" width="24" height="24" alt="">
+        <input id="search-input" type="search" placeholder="Search Hospital" autocomplete="off" aria-label="Search hospital by name">
+        <button class="icon-btn" id="search-clear" type="button" aria-label="Clear search" hidden><img src="assets/clear.svg" width="24" height="24" alt=""></button>
+      </label>
+      <div class="results" id="results" aria-live="polite"></div>
+      <div class="notice" id="no-results" hidden>
+        <p class="label-md">No hospitals found</p>
+        <p class="alt">Try a different name or scan your hospital’s QR code.</p>
+        <button class="btn btn-filled" data-go="scan"><img src="assets/scan-alt.svg" width="24" height="24" alt="">Scan Hospital Code</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scan (not designed in Figma) -->
+  <section class="screen" data-screen="scan" data-title="Scan hospital code" data-placeholder>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Scan Hospital Code</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <span class="proto-flag">Not in Figma · prototype stand-in</span>
+      <div class="scanner" id="scanner">
+        <div class="frame"></div>
+        <div class="line"></div>
+        <div class="found">Hospital code found<br>Bayview General Hospital</div>
+      </div>
+      <p class="body-md">Point your camera at the QR code on your discharge paperwork or hospital wristband.</p>
+      <button class="btn btn-filled" id="simulate-scan">Simulate Successful Scan</button>
+      <button class="btn btn-outline" data-go="search">Search by Name Instead</button>
+    </div>
+  </section>
+
+  <!-- 03 Hospital Portal Sign In (167:2430) + Access Denied (228:2094) -->
+  <section class="screen" data-screen="hospital" data-title="Hospital portal sign-in">
+    <div class="banner" id="denied-banner" role="alert" hidden>
+      <p>Patient Portal Access Denied</p>
+      <button class="icon-btn" id="denied-close" aria-label="Dismiss"><img src="assets/close.svg" width="24" height="24" alt=""></button>
+    </div>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title" data-bind="hospital">Bayview General Hospital</span>
+      <span class="icon-btn spacer" aria-hidden="true"><img src="assets/header-right.svg" width="24" height="24" alt=""></span>
+    </header>
+    <div class="content">
+      <div class="hero-img">Hospital Image / Logo</div>
+      <h1 class="h-hero" data-bind="hospital">Bayview General Hospital</h1>
+      <div class="row" style="gap:12px">
+        <span class="epic-tile"><img src="assets/epic.svg" width="18" height="18" alt=""></span>
+        <p class="title-md">Uses the Bayview Health patient portal</p>
+      </div>
+      <p class="body-md">You will be directed to the <span data-bind="hospital">Bayview General Hospital</span> patient portal to complete sign in.</p>
+      <button class="btn btn-filled" data-go="redirect">Continue to Patient Portal<img src="assets/arrow-right.svg" width="24" height="24" alt=""></button>
+      <div class="notice">
+        <p class="label-md">Need help logging in?</p>
+        <p class="alt">Contact your discharge nurse or hospital navigator:</p>
+        <button class="btn btn-outline" data-call>1-800-555-0199</button>
+      </div>
+      <div class="stack-8">
+        <div class="security"><img src="assets/shield.svg" width="12" height="15" alt="">256-Bit Encrypted • HIPAA Compliant • Direct Hospital Sync</div>
+        <p class="footnote">Secure Sign-in with SMART on FHIR (OAuth 2.0). Your health system never shares your password with this app</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 Patient Portal Redirect (212:3676, placeholder in Figma) -->
+  <section class="screen" data-screen="redirect" data-title="Patient portal redirect" data-placeholder>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Patient Portal</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content centered" style="text-align:center">
+      <span class="proto-flag" style="align-self:center">Figma placeholder · prototype stand-in</span>
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="stack-8">
+        <h1 class="h-hero" style="font-size:32px;line-height:40px">Opening your patient portal</h1>
+        <p class="body-md">In the live app, you’ll sign in on <span data-bind="hospital">Bayview General Hospital</span>’s own secure site. This app never sees your password.</p>
+      </div>
+      <button class="btn btn-filled" data-go="permissions">Simulate Successful Sign-In</button>
+      <button class="btn btn-outline" id="simulate-fail">Simulate Failed Sign-In</button>
+    </div>
+  </section>
+
+  <!-- 05 Patient Portal Access Permissions (212:3723) -->
+  <section class="screen" data-screen="permissions" data-title="Authorize EHR access">
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Authorize Access</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <h1 class="h-hero">Allow Post-Acute Navigator to access your patient portal:</h1>
+      <ul class="perm-list">
+        <li>Discharge Instructions &amp; Recovery Plan</li>
+        <li>Prescribed Medications &amp; Dosages</li>
+        <li>Real-Time Symptoms &amp; Vitals Sync (Write Access)</li>
+        <li>Care Team &amp; Physician Notes</li>
+      </ul>
+      <div class="bullets">
+        <div class="row" style="gap:8px"><img src="assets/perm-shield.svg" width="13.3333" height="16.6667" alt=""><p class="body-md">Data Protection &amp; Patient Rights</p></div>
+        <div class="item"><img src="assets/bullet.svg" width="8.15" height="10.0125" alt=""><p class="body-md">Record Integrity: Post-Acute Navigator cannot alter or delete your official hospital medical history without direct physician sign-off.</p></div>
+        <div class="item"><img src="assets/bullet.svg" width="8.15" height="10.0125" alt=""><p class="body-md">Compliance: Protected under HIPAA regulations and certified ONC Health IT interoperability standards.</p></div>
+        <p class="body-md">Expiration: This authorization automatically expires in XX days. You can revoke it at any time in your patient portal &gt; Account Settings &gt; Linked Applications.</p>
+      </div>
+      <button class="btn btn-filled" data-go="loading">Allow Access</button>
+      <button class="btn btn-outline" id="deny-access">Deny</button>
+    </div>
+  </section>
+
+  <!-- 06 Care Plan Loading (214:3773) -->
+  <section class="screen" data-screen="loading" data-title="Syncing care plan">
+    <div class="content centered" style="text-align:center;gap:32px">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="stack-8">
+        <h1 class="h-hero" style="font-size:32px;line-height:40px">Preparing your recovery plan</h1>
+        <p class="body-md" role="status" id="loading-status">Securely importing from <span data-bind="hospital">Bayview General Hospital</span>…</p>
+      </div>
+      <div class="progress" aria-hidden="true"><b id="loading-bar"></b></div>
+      <ul class="checklist" id="loading-list">
+        <li>Discharge instructions</li>
+        <li>Medications &amp; dosages</li>
+        <li>Follow-up appointments</li>
+        <li>Care team</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 07 Recovery Tour Welcome (214:3798) -->
+  <section class="screen" data-screen="tour-welcome" data-title="Tour welcome">
+    <header class="appbar center"><span class="appbar-title">Post-Acute Navigator</span></header>
+    <div class="content space-between">
+      <div class="content" style="padding:0;flex:none">
+        <div class="stack-8">
+          <h1 class="h-hero">Hi, Martin.<br>Let’s take recovery one step at a time.</h1>
+          <p class="body-md">Get guidance to support your recovery, understand what to expect, and feel more confident about each next step.</p>
+        </div>
+        <button class="btn btn-filled" data-go="tour-1">Take a Quick Tour</button>
+        <button class="btn btn-outline" data-go="dashboard">Skip to Dashboard</button>
+      </div>
+      <button class="btn btn-text" data-logout>Log Out</button>
+    </div>
+  </section>
+
+  <!-- 08 Tour: Recovery Plan Overview (230:2201) -->
+  <section class="screen" data-screen="tour-1" data-title="Tour 1 · Recovery plan">
+    <header class="appbar tour">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/tour-back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Post-Acute Navigator</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="tour-top"><div class="dots" data-step="1" aria-label="Step 1 of 5"></div><button class="btn btn-text small" data-logout>Log Out</button></div>
+      <div class="stack-8">
+        <h1 class="h-hero">Your recovery plan, step by step.</h1>
+        <p class="body-md">Automatically synced from your hospital care plan.</p>
+      </div>
+      <div class="stack-4">
+        <p class="label-md">Active Plan</p>
+        <p class="h5">Total Knee Arthroplasty</p>
+      </div>
+      <div class="card">
+        <div class="stack-4"><p class="label-md">Health Reading Log</p><p class="body-md">Sterile dressing inspection &amp; photograph upload</p></div>
+        <hr>
+        <div class="stack-4"><p class="label-md">Medication Scheduling</p><p class="body-md">Review the medications in your hospital care plan.</p></div>
+        <hr>
+        <div class="stack-4"><p class="label-md">Follow-Up Appointments</p><p class="body-md">Keep track of all your follow-up appointments</p></div>
+        <hr>
+        <div class="stack-4"><p class="label-md">Your Care Team</p><p class="body-md">Keep track of all your follow-up appointments</p></div>
+      </div>
+      <button class="btn btn-filled" data-go="tour-2">Next: Health Reading Log</button>
+      <button class="btn btn-outline" data-go="dashboard">Skip to Dashboard</button>
+    </div>
+  </section>
+
+  <!-- 09 Tour: Health Reading Log (265:3373) -->
+  <section class="screen" data-screen="tour-2" data-title="Tour 2 · Health reading log">
+    <header class="appbar tour">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/tour-back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Post-Acute Navigator</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="tour-top"><div class="dots" data-step="2" aria-label="Step 2 of 5"></div><button class="btn btn-text small" data-logout>Log Out</button></div>
+      <div class="stack-8">
+        <h1 class="h-hero">Health Reading Log</h1>
+        <p class="body-md">Sterile dressing inspection &amp; photograph upload.</p>
+      </div>
+      <div class="card">
+        <div class="row" style="gap:8px">
+          <img src="assets/square-text.svg" width="40" height="40" alt="">
+          <img src="assets/camera.svg" width="40" height="40" alt="">
+        </div>
+        <div class="stack-4">
+          <p class="label-md">Log or Check-In with a Photo</p>
+          <p class="body-md">Log your temperature, pain, and drain out, and photograph your incision. If something looks off, your care team will contact you.</p>
+        </div>
+      </div>
+      <button class="btn btn-filled" data-go="tour-3">Next: Medication Scheduling</button>
+      <button class="btn btn-outline" data-go="dashboard">Skip to Dashboard</button>
+    </div>
+  </section>
+
+  <!-- 10 Tour: Medication Scheduling (230:2367) -->
+  <section class="screen" data-screen="tour-3" data-title="Tour 3 · Medications">
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/tour-back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Post-Acute Navigator</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="tour-top"><div class="dots" data-step="3" aria-label="Step 3 of 5"></div><button class="btn btn-text small" data-logout>Log Out</button></div>
+      <div class="stack-8">
+        <h1 class="h-hero">Medication Scheduling</h1>
+        <p class="body-md">Review the medications in your hospital care plan.</p>
+      </div>
+      <div class="card"><div class="stack-4">
+        <p class="label-md">Acetaminophen (paracetamol)</p>
+        <p class="body-md">Helps control baseline pain and reduce opioid use</p>
+        <div class="row-8"><img src="assets/clock.svg" width="24" height="24" alt=""><p class="body-md semibold">8:00 AM &amp; 8:00 PM • With food</p></div>
+      </div></div>
+      <div class="card"><div class="stack-4">
+        <p class="label-md">Celecoxib</p>
+        <p class="body-md">Reduces pain and inflammation</p>
+        <div class="row-8"><img src="assets/clock.svg" width="24" height="24" alt=""><p class="body-md semibold">As needed (Maximum: 4 per day)</p></div>
+      </div></div>
+      <div class="card"><div class="stack-4">
+        <p class="label-md">Oxycodone</p>
+        <p class="body-md">Short-term relief for severe pain</p>
+        <div class="row-8"><img src="assets/clock.svg" width="24" height="24" alt=""><p class="body-md semibold">As needed (Maximum: 1 per day)</p></div>
+      </div></div>
+      <button class="btn btn-filled" data-go="tour-4">Next: Follow-up Appointments</button>
+      <button class="btn btn-outline" data-go="dashboard">Skip to Dashboard</button>
+    </div>
+  </section>
+
+  <!-- 11 Tour: Follow-Up Appointments (270:205) -->
+  <section class="screen" data-screen="tour-4" data-title="Tour 4 · Appointments">
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/tour-back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Post-Acute Navigator</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="tour-top"><div class="dots" data-step="4" aria-label="Step 4 of 5"></div><button class="btn btn-text small" data-logout>Log Out</button></div>
+      <div class="stack-8">
+        <h1 class="h-hero">Follow-Up Appointments</h1>
+        <p class="body-md">Keep track of all your follow-up appointments.</p>
+      </div>
+      <div class="card">
+        <div class="stack-8">
+          <img src="assets/calendar.svg" width="40" height="40" alt="">
+          <div class="stack-4"><p class="label-md">Next Follow-Up</p><p class="body-lg">October 29, 2026</p></div>
+        </div>
+        <hr>
+        <div class="stack-4"><p class="body-md semibold" style="color:var(--text-default-default)">Dr. Jane Smith</p><p class="body-md">Orthopedic Surgeon</p></div>
+      </div>
+      <button class="btn btn-filled" data-go="tour-5">Next: Your Care Team</button>
+      <button class="btn btn-outline" data-go="dashboard">Skip to Dashboard</button>
+    </div>
+  </section>
+
+  <!-- 12 Tour: Your Care Team (270:569) -->
+  <section class="screen" data-screen="tour-5" data-title="Tour 5 · Care team">
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/tour-back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Post-Acute Navigator</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="tour-top"><div class="dots" data-step="5" aria-label="Step 5 of 5"></div><button class="btn btn-text small" data-logout>Log Out</button></div>
+      <div class="stack-8">
+        <h1 class="h-hero">Your Dedicated Care Team</h1>
+        <p class="body-md">Maintain contact with your care team and track physician notes.</p>
+      </div>
+      <div class="card"><div class="row">
+        <img src="assets/circle-user.svg" width="40" height="40" alt="">
+        <div class="stack-4" style="flex:1"><p class="label-md">John Smith, RN.</p><p class="body-md">Registered Nurse on duty</p></div>
+        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging John Smith, RN (simulated)" aria-label="Message John Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+      </div></div>
+      <div class="card"><div class="row">
+        <img src="assets/circle-user.svg" width="40" height="40" alt="">
+        <div class="stack-4" style="flex:1"><p class="label-md">Dr. Jane Smith</p><p class="body-md">Orthopedic Surgeon</p></div>
+        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Dr. Jane Smith (simulated)" aria-label="Message Dr. Jane Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+      </div></div>
+      <div class="notice">
+        <p class="label-md">24/7 Urgent Hotline</p>
+        <p class="alt" style="font-size:16px">Immediate medical triage in case of urgent help.</p>
+        <button class="btn btn-outline" data-call>1-800-555-0199</button>
+      </div>
+      <button class="btn btn-filled" data-go="dashboard">Go to Dashboard</button>
+    </div>
+  </section>
+
+  <!-- Dashboard (not designed in Figma) -->
+  <section class="screen" data-screen="dashboard" data-title="Patient dashboard">
+    <header class="appbar">
+      <button class="icon-btn menu-btn" id="menu-open" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><img src="assets/menu.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Post-Acute Navigator</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Good morning, Martin</h1>
+        <div>
+          <p class="h5" style="font-weight:500;line-height:32px">Recovery Day 3</p>
+          <p class="body-md">Total Knee Arthroplasty</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row-8"><img src="assets/clock.svg" width="24" height="24" alt=""><div class="stack-4"><p class="label-md">Next dose · 8:00 PM</p><p class="body-md">Acetaminophen (paracetamol) · With food</p></div></div>
+      </div>
+      <div class="card">
+        <div class="row"><img src="assets/camera.svg" width="40" height="40" alt=""><div class="stack-4" style="flex:1"><p class="label-md">Today’s health check-in</p><p class="body-md" id="dash-checkin-text">Vitals, an incision photo and redressing</p></div></div>
+        <p class="status-line" id="dash-checkin-done" hidden>Completed today</p>
+        <button class="btn btn-filled" data-go="checkin" id="dash-checkin-btn">Start Check-In</button>
+      </div>
+      <div class="card">
+        <div class="row"><img src="assets/calendar.svg" width="40" height="40" alt=""><div class="stack-4"><p class="label-md">Next follow-up</p><p class="body-md">October 29, 2026 · Dr. Jane Smith</p></div></div>
+      </div>
+      <button class="btn btn-outline" data-go="tour-1">Replay the Tour</button>
+      <button class="btn btn-text" data-logout>Log Out</button>
+    </div>
+  </section>
+
+  <!-- Health Check-In (372:7018) -->
+  <section class="screen" data-screen="checkin" data-title="Health check-in">
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Health Check-In</span>
+      <span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Health Check-In</h1>
+        <p class="title-sm">Recovery Day 3</p>
+        <p class="body-md" id="checkin-date">October 27, 2026</p>
+      </div>
+      <p class="status-line sent-banner" id="sent-banner">Sent to your care team</p>
+
+      <div class="stack-8" style="gap:12px">
+        <h2 class="h-section" id="sec-vitals">1 of 2: Log your Vitals<span class="section-check" aria-label="Complete"></span></h2>
+        <div id="vitals" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+
+      <div class="stack-8" style="gap:12px">
+        <h2 class="h-section" id="sec-incision">2 of 2: Submit Incision Photo &amp; Redress<span class="section-check" aria-label="Complete"></span></h2>
+        <div class="card" id="photo-card">
+          <div class="photos" id="photos"></div>
+          <div class="stack-4" style="gap:8px">
+            <p class="label-md">Incision Photo</p>
+            <p class="body-md">Take a photo of your incision so we can monitor your healing</p>
+          </div>
+          <button class="btn btn-outline" id="take-photo"><img src="assets/camera-btn.svg" width="24" height="24" alt="">Take Photo</button>
+        </div>
+        <div class="card" id="redress-card">
+          <div class="stack-4" style="gap:8px">
+            <p class="label-md">Incision Redressing</p>
+            <p class="body-md">Redress your incision to prevent infection</p>
+          </div>
+          <p class="status-line" id="redress-done" hidden>Redressed today</p>
+          <button class="btn btn-outline" id="start-redress">Start Incision Redressing</button>
+        </div>
+      </div>
+
+      <div class="slide" id="slide" aria-label="Slide to confirm check-in">
+        <div class="slide-fill"></div>
+        <img class="slide-spinner" src="assets/slide-spinner.png" width="32" height="32" alt="">
+        <div class="slide-label" id="slide-label">Slide to Confirm Check-In</div>
+        <button class="slide-thumb" id="slide-thumb" aria-label="Confirm check-in. Drag right, or press Enter."><img src="assets/slider-thumb.svg" width="24" height="24" alt=""></button>
+      </div>
+      <p class="slide-hint" id="slide-hint">Your vitals, photos and redressing go to your care team.</p>
+    </div>
+  </section>
+
+  <!-- Incision redressing sheet (prototype addition) -->
+  <div class="sheet-wrap" id="sheet" hidden>
+    <div class="sheet-backdrop" data-sheet-close></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="sheet-grip" aria-hidden="true"></div>
+      <div class="sheet-head">
+        <button class="icon-btn" id="sheet-back" aria-label="Previous step"><img src="assets/tour-back.svg" width="24" height="24" alt=""></button>
+        <span class="appbar-title" id="sheet-title">Incision Redressing</span>
+        <button class="icon-btn" data-sheet-close aria-label="Close"><img src="assets/clear.svg" width="24" height="24" alt=""></button>
+      </div>
+      <div class="sheet-progress">
+        <small id="sheet-step-label">Step 1 of 6</small>
+        <div class="progress" aria-hidden="true"><b id="sheet-bar"></b></div>
+      </div>
+      <div class="sheet-body" id="sheet-body"></div>
+      <div class="sheet-actions" id="sheet-actions"></div>
+    </div>
+  </div>
+
+  <!-- Check-in sent confirmation (prototype addition) -->
+  <section class="screen" data-screen="checkin-sent" data-title="Check-in sent" data-placeholder>
+    <div class="content sent">
+      <svg class="sent-check" viewBox="0 0 144 144" aria-hidden="true">
+        <g class="spark" stroke="var(--surface-success-default)" stroke-width="4" stroke-linecap="round">
+          <path d="M72 6v12M72 126v12M6 72h12M126 72h12M25 25l8 8M111 111l8 8M119 25l-8 8M33 111l-8 8"/></g>
+        <circle class="fill" cx="72" cy="72" r="56" fill="var(--surface-success-default)"/>
+        <circle class="ring" cx="72" cy="72" r="64" fill="none" stroke="var(--surface-success-default)" stroke-width="4" transform="rotate(-90 72 72)"/>
+        <path class="tick" d="M48 74l16 16 32-34" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="stack-8">
+        <h1 class="h-hero" style="font-size:32px;line-height:40px" tabindex="-1">Check-in sent</h1>
+        <p class="body-md" id="sent-text">Your care team will review your vitals, incision photo and redressing.</p>
+      </div>
+      <div class="callout warn" id="sent-flag" hidden style="text-align:left"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg><p id="sent-flag-text">Something you reported needs a closer look. Your care team will follow up today.</p></div>
+      <p class="callout info" id="sent-missing" hidden style="text-align:left;width:100%"><span></span></p>
+      <div class="stack-8" style="width:100%">
+        <p class="slide-hint" style="margin:0" role="status">Returning to your dashboard…</p>
+        <div class="redirect-bar" id="redirect-bar"><b></b></div>
+      </div>
+      <button class="btn btn-outline" id="sent-dashboard">Go to Dashboard</button>
+    </div>
+  </section>
+
+  <!-- Simulated camera app (prototype addition) -->
+  <div class="camera" id="camera" role="dialog" aria-modal="true" aria-label="Camera" hidden>
+    <div class="cam-top">
+      <button class="cam-icon" id="cam-close" aria-label="Close camera">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <span id="cam-title">Incision Photo</span>
+      <button class="cam-icon" id="cam-flash" aria-label="Flash off" aria-pressed="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></button>
+    </div>
+    <div class="viewfinder">
+      <div class="cam-booting">Opening camera…</div>
+      <div class="feed" id="cam-feed"></div>
+      <div class="guide" aria-hidden="true"></div>
+      <div class="cam-tip">Center your incision · use good light</div>
+      <div class="flash" id="cam-flash-fx"></div>
+    </div>
+    <div class="cam-bottom">
+      <div><button class="cam-text-btn" id="cam-cancel">Cancel</button></div>
+      <div><button class="shutter" id="cam-shutter" aria-label="Take photo" disabled></button></div>
+      <div><span class="cam-text-btn" aria-hidden="true" style="opacity:.6">PHOTO</span></div>
+    </div>
+    <div class="cam-review">
+      <button class="btn btn-outline" id="cam-retake">Retake</button>
+      <button class="btn btn-filled" id="cam-use">Use Photo</button>
+    </div>
+  </div>
+
+  <!-- Some Information is Missing (413:12291) -->
+  <div class="modal-wrap" id="missing-modal" hidden>
+    <div class="drawer-scrim" id="missing-scrim"></div>
+    <div class="modal card" role="alertdialog" aria-modal="true" aria-labelledby="missing-title" aria-describedby="missing-desc">
+     <button class="icon-btn modal-close" id="missing-close" aria-label="Close"><img src="assets/clear.svg" width="24" height="24" alt=""></button>
+     <!-- Step 1 (423:1639): what's missing -->
+     <div class="modal-step" id="missing-step-1">
+      <div class="stack-4">
+        <h2 class="label-md" id="missing-title" tabindex="-1">Some Information is Missing</h2>
+        <p class="body-md" id="missing-desc">We want to make sure this was intentional. The following information is missing:</p>
+      </div>
+      <ul class="missing-list" id="missing-list"></ul>
+      <button class="btn btn-outline" id="missing-back">Go Back And Complete</button>
+      <button class="btn btn-text" id="missing-cant">I Can’t Provide Information</button>
+     </div>
+     <!-- Step 2 (424:13175): why -->
+     <div class="modal-step" id="missing-step-2" hidden>
+      <fieldset class="reason">
+        <legend class="label-md" id="reason-title" tabindex="-1"><span class="req" aria-hidden="true">*</span>Reason<span class="sr-only"> (required)</span></legend>
+        <p class="body-md" id="missing-reason-hint">Choose one so your care team knows what happened.</p>
+        <div class="reason-options" role="radiogroup" aria-labelledby="reason-title" aria-describedby="missing-reason-hint" id="missing-reasons">
+          <label class="check-row radio"><input type="radio" name="missing-reason" value="equipment"><span></span>I don’t have what I need</label>
+          <label class="check-row radio"><input type="radio" name="missing-reason" value="unwell"><span></span>I didn’t feel well enough</label>
+          <label class="check-row radio"><input type="radio" name="missing-reason" value="other"><span></span>Something else</label>
+        </div>
+        <div class="reason-other" id="reason-other" hidden>
+          <label class="label-md" for="reason-other-text">Tell us what happened</label>
+          <textarea id="reason-other-text" rows="2" maxlength="200" placeholder="For example, I was at an appointment"></textarea>
+        </div>
+      </fieldset>
+      <div class="slide" aria-label="Slide to confirm check-in without the missing information">
+        <div class="slide-fill"></div>
+        <img class="slide-spinner" src="assets/slide-spinner.png" width="32" height="32" alt="">
+        <div class="slide-label">Slide to Confirm Check-In</div>
+        <button class="slide-thumb" aria-label="Send check-in anyway. Drag right, or press Enter."><img src="assets/slider-thumb.svg" width="24" height="24" alt=""></button>
+      </div>
+      <button class="btn btn-outline" id="reason-back">Back</button>
+     </div>
+    </div>
+  </div>
+
+  <!-- Menu drawer (391:11253) -->
+  <div class="drawer-wrap" id="drawer" hidden>
+    <div class="drawer-scrim" id="drawer-scrim"></div>
+    <nav class="drawer" aria-label="Main menu" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <div class="stack-8">
+        <h2 class="h4" id="drawer-title" tabindex="-1">Menu</h2>
+        <p class="body-md">Here for you, Martin.<br>Let’s find what you need.</p>
+      </div>
+      <div class="menu-card">
+        <button class="menu-item feature" data-menu="care-team">
+          <img src="assets/users-round.svg" width="24" height="24" alt="">
+          <span class="row"><span class="stack-4"><span class="label-md">Your Care Team</span><span class="body-md">Familiar faces, here to help</span></span>
+          <img src="assets/chevron-right.svg" width="24" height="24" alt=""></span>
+        </button>
+      </div>
+      <div class="menu-card">
+        <button class="menu-item" data-menu="history"><span class="stack-4"><span class="label-md">Check-In History</span><span class="body-md">Review your past check-ins</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <hr>
+        <button class="menu-item" data-menu="records"><span class="stack-4"><span class="label-md">Medical Records</span><span class="body-md">Keep track of your records</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <hr>
+        <button class="menu-item" data-menu="notifications"><span class="stack-4"><span class="label-md">Notifications</span><span class="body-md">Manage alerts and reminders</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <hr>
+        <button class="menu-item" data-menu="settings"><span class="stack-4"><span class="label-md">Account Settings</span><span class="body-md">Manage profile and details</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Menu destination: Your Care Team -->
+  <section class="screen" data-screen="care-team" data-title="Menu · Your care team" data-placeholder>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Your Care Team</span><span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Your Care Team</h1>
+        <p class="body-md">Familiar faces, here to help. Message them any time; replies usually come within a few hours.</p>
+      </div>
+      <p class="eyebrow">On duty now</p>
+      <div class="card"><div class="row">
+        <img src="assets/circle-user.svg" width="40" height="40" alt="">
+        <div class="stack-4" style="flex:1"><p class="label-md">John Smith, RN</p><p class="body-md">Registered Nurse · Your main contact</p></div>
+        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging John Smith, RN (simulated)" aria-label="Message John Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+      </div></div>
+      <p class="eyebrow">Your surgical team</p>
+      <div class="card"><div class="row">
+        <img src="assets/circle-user.svg" width="40" height="40" alt="">
+        <div class="stack-4" style="flex:1"><p class="label-md">Dr. Jane Smith</p><p class="body-md">Orthopedic Surgeon</p></div>
+        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Dr. Jane Smith (simulated)" aria-label="Message Dr. Jane Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+      </div></div>
+      <div class="card"><div class="row">
+        <img src="assets/circle-user.svg" width="40" height="40" alt="">
+        <div class="stack-4" style="flex:1"><p class="label-md">Alex Rivera, PT</p><p class="body-md">Physical Therapist</p></div>
+        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Alex Rivera, PT (simulated)" aria-label="Message Alex Rivera"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+      </div></div>
+      <div class="notice">
+        <p class="label-md">24/7 Urgent Hotline</p>
+        <p class="alt" style="font-size:16px">Immediate medical triage in case of urgent help. For an emergency, call 911.</p>
+        <button class="btn btn-outline" data-call>1-800-555-0199</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Menu destination: Check-In History -->
+  <section class="screen" data-screen="history" data-title="Menu · Check-in history" data-placeholder>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Check-In History</span><span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Check-In History</h1>
+        <p class="body-md">Review your past check-ins. Tap a day to see what you sent.</p>
+      </div>
+      <div class="card list-card" style="flex-direction:row;padding:0">
+        <div class="list-row" style="flex-direction:column;align-items:flex-start;gap:0"><span class="body-md">This week</span><span class="h5" style="font-weight:500" id="hist-streak">3 of 3 days</span></div>
+        <div class="list-row" style="flex-direction:column;align-items:flex-start;gap:0;border-top:0;border-left:1px solid var(--border-default-default)"><span class="body-md">Flagged for review</span><span class="h5" style="font-weight:500" id="hist-flags">1</span></div>
+      </div>
+      <div id="history-list" style="display:flex;flex-direction:column;gap:12px"></div>
+    </div>
+  </section>
+
+  <!-- Menu destination: Medical Records -->
+  <section class="screen" data-screen="records" data-title="Menu · Medical records" data-placeholder>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Medical Records</span><span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Medical Records</h1>
+        <p class="body-md">Synced from <span data-bind="hospital">Bayview General Hospital</span> · Updated today</p>
+      </div>
+      <p class="eyebrow">Your surgery</p>
+      <div class="card list-card">
+        <button class="list-row" data-toast="Discharge summary viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Discharge Summary</span><span class="body-md">Oct 25, 2026 · Dr. Jane Smith</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <button class="list-row" data-toast="Care plan viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Care Plan</span><span class="body-md">Total Knee Arthroplasty</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <button class="list-row" data-toast="Operative note viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Operative Note</span><span class="body-md">Oct 23, 2026 · Right knee</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+      </div>
+      <p class="eyebrow">Medications</p>
+      <div class="card list-card">
+        <div class="list-row"><span class="stack-4"><span class="label-md">Acetaminophen (paracetamol)</span><span class="body-md">8:00 AM &amp; 8:00 PM · With food</span></span></div>
+        <div class="list-row"><span class="stack-4"><span class="label-md">Celecoxib</span><span class="body-md">As needed · Max 4 per day</span></span></div>
+        <div class="list-row"><span class="stack-4"><span class="label-md">Oxycodone</span><span class="body-md">As needed · Max 1 per day</span></span></div>
+      </div>
+      <p class="eyebrow">Results &amp; health details</p>
+      <div class="card list-card">
+        <button class="list-row" data-toast="Lab results viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Lab Results</span><span class="body-md">Complete blood count · Oct 24</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <button class="list-row" data-toast="Imaging viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Imaging</span><span class="body-md">Knee X-ray · Oct 24</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <div class="list-row"><span class="stack-4"><span class="label-md">Allergies</span><span class="body-md">Penicillin</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Menu destination: Notifications -->
+  <section class="screen" data-screen="notifications" data-title="Menu · Notifications" data-placeholder>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Notifications</span><span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="stack-8">
+        <h1 class="h-hero">Notifications</h1>
+        <p class="body-md">Choose which alerts and reminders you get.</p>
+      </div>
+      <p class="eyebrow">Reminders</p>
+      <div class="card list-card">
+        <label class="list-row"><span class="stack-4"><span class="label-md">Medication reminders</span><span class="body-md">At each scheduled dose</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Medication reminders"><span></span></span></label>
+        <label class="list-row"><span class="stack-4"><span class="label-md">Daily check-in</span><span class="body-md">Every day at 9:00 AM</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Daily check-in reminders"><span></span></span></label>
+        <label class="list-row"><span class="stack-4"><span class="label-md">Appointment reminders</span><span class="body-md">1 day and 2 hours before</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Appointment reminders"><span></span></span></label>
+      </div>
+      <p class="eyebrow">Updates</p>
+      <div class="card list-card">
+        <label class="list-row"><span class="stack-4"><span class="label-md">Care team messages</span><span class="body-md">When your team replies</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Care team messages"><span></span></span></label>
+        <label class="list-row"><span class="stack-4"><span class="label-md">Recovery tips</span><span class="body-md">A short tip each morning</span></span><span class="switch"><input type="checkbox" role="switch" data-note="Recovery tips"><span></span></span></label>
+      </div>
+      <p class="eyebrow">Quiet hours</p>
+      <div class="card list-card">
+        <label class="list-row"><span class="stack-4"><span class="label-md">Pause non-urgent alerts</span><span class="body-md">10:00 PM – 7:00 AM. Medication reminders still come through.</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Quiet hours"><span></span></span></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Menu destination: Account Settings -->
+  <section class="screen" data-screen="settings" data-title="Menu · Account settings" data-placeholder>
+    <header class="appbar">
+      <button class="icon-btn" data-back aria-label="Back"><img src="assets/back.svg" width="24" height="24" alt=""></button>
+      <span class="appbar-title">Account Settings</span><span class="icon-btn spacer" aria-hidden="true"></span>
+    </header>
+    <div class="content">
+      <div class="card"><div class="row" style="gap:12px">
+        <span class="avatar" aria-hidden="true">M</span>
+        <div class="stack-4" style="flex:1"><p class="label-md">Martin</p><p class="body-md">Patient at <span data-bind="hospital">Bayview General Hospital</span></p></div>
+      </div></div>
+      <p class="eyebrow">Profile</p>
+      <div class="card list-card">
+        <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Phone</span><span class="body-md">(555) 010-0142</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Email</span><span class="body-md">martin@example.com</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Emergency contact</span><span class="body-md">Add someone we can reach</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+      </div>
+      <p class="eyebrow">Connected hospital</p>
+      <div class="card list-card">
+        <div class="list-row"><span class="epic-tile"><img src="assets/epic.svg" width="18" height="18" alt=""></span><span class="stack-4"><span class="label-md" data-bind="hospital">Bayview General Hospital</span><span class="body-md">Patient portal access · Expires in 90 days</span></span></div>
+        <button class="list-row" data-toast="Access management isn’t designed yet"><span class="stack-4"><span class="label-md">Manage access</span><span class="body-md">See or revoke what this app can read</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+      </div>
+      <p class="eyebrow">Preferences &amp; security</p>
+      <div class="card list-card">
+        <button class="list-row" data-toast="Language picker isn’t designed yet"><span class="stack-4"><span class="label-md">Language</span></span><span class="value">English</span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <button class="list-row" data-toast="Text size picker isn’t designed yet"><span class="stack-4"><span class="label-md">Text size</span></span><span class="value">Default</span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        <label class="list-row"><span class="stack-4"><span class="label-md">Unlock with Face ID</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Face ID unlock"><span></span></span></label>
+      </div>
+      <button class="btn btn-outline" data-logout>Log Out</button>
+      <p class="body-md" style="text-align:center;font-size:14px;line-height:20px;color:var(--text-default-caption)">Post-Acute Navigator · Version 1.0 (prototype)</p>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
+
+<aside class="panel" aria-label="Prototype controls">
+  <h2>Onboarding prototype</h2>
+  <p>Click through the phone, or jump to any screen. Dashed tags mark screens that aren’t designed in Figma yet.</p>
+  <h3>Screens</h3>
+  <ol id="screen-list"></ol>
+  <button class="restart" id="reset-checkin">Reset today’s check-in</button>
+  <button class="restart" id="restart">Restart from the beginning</button>
+</aside>
+
+<script>
+(() => {
+  const HOSPITALS = [
+    { name: "Bayview General Hospital", city: "Bayview, FL." },
+    { name: "Bayview General Hospital Women's Health", city: "Bayview, FL." },
+  ];
+  const screens = [...document.querySelectorAll(".screen")];
+  const byName = Object.fromEntries(screens.map(s => [s.dataset.screen, s]));
+  const state = { stack: [], hospital: HOSPITALS[0].name, returning: false };
+  let timers = [];
+
+  // ---- Navigation ----
+  function show(name, { back = false, replace = false } = {}) {
+    const current = state.stack[state.stack.length - 1];
+    if (!back) { if (replace) state.stack.pop(); if (current !== name) state.stack.push(name); }
+    const dw = document.getElementById("drawer");
+    if (dw && !dw.hidden) { dw.classList.remove("open"); dw.hidden = true; document.getElementById("menu-open").setAttribute("aria-expanded", "false"); }
+    screens.forEach(s => s.classList.remove("active", "back", "pushed", "unpushing"));
+    const el = byName[name];
+    el.classList.add("active");
+    if (back) el.classList.add("back");
+    el.scrollTop = 0;
+    timers.forEach(clearTimeout); timers = [];
+    onEnter[name]?.();
+    renderPanel();
+    const focusTarget = el.querySelector("h1, .appbar-title");
+    if (focusTarget && document.activeElement && document.activeElement !== document.body) {
+      focusTarget.setAttribute("tabindex", "-1"); focusTarget.focus({ preventScroll: true });
+    }
+  }
+  // Where Back goes when there's no history (e.g. a screen opened directly from the screen list)
+  const PARENT = {
+    search: () => startScreen(), scan: () => startScreen(), hospital: "search", redirect: "hospital", permissions: "redirect",
+    "tour-1": "tour-welcome", "tour-2": "tour-1", "tour-3": "tour-2", "tour-4": "tour-3", "tour-5": "tour-4",
+    checkin: "dashboard", "care-team": "dashboard", history: "dashboard", records: "dashboard",
+    notifications: "dashboard", settings: "dashboard",
+  };
+  function goBack() {
+    if (state.stack.length > 1) { state.stack.pop(); show(state.stack[state.stack.length - 1], { back: true }); return; }
+    const current = state.stack[state.stack.length - 1];
+    let parent = PARENT[current];
+    if (typeof parent === "function") parent = parent();
+    if (parent) { state.stack = [parent]; show(parent, { back: true }); }
+  }
+  function startScreen() { return state.returning ? "welcome-back" : "welcome"; }
+  function restart() { state.stack = []; show(startScreen()); }
+
+  document.addEventListener("click", e => {
+    const go = e.target.closest("[data-go]");
+    if (go) { show(go.dataset.go); return; }
+    if (e.target.closest("[data-back]")) { goBack(); return; }
+    if (e.target.closest("[data-logout]")) { state.returning = true; state.stack = []; show("welcome-back"); toast("You’ve been logged out"); return; }
+    if (e.target.closest("[data-call]")) { toast("Calling hospital navigator (simulated)"); return; }
+    const t = e.target.closest("[data-toast]");
+    if (t) toast(t.dataset.toast);
+  });
+
+  // ---- Hospital binding ----
+  function setHospital(name) {
+    state.hospital = name;
+    document.querySelectorAll('[data-bind="hospital"]').forEach(n => n.textContent = name);
+  }
+
+  // ---- Search ----
+  const input = document.getElementById("search-input");
+  const clearBtn = document.getElementById("search-clear");
+  const results = document.getElementById("results");
+  const noResults = document.getElementById("no-results");
+  const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function renderResults() {
+    const q = input.value.trim().toLowerCase();
+    clearBtn.hidden = !input.value;
+    results.innerHTML = "";
+    noResults.hidden = true;
+    if (!q) return;
+    const terms = q.split(/\s+/);
+    const matches = HOSPITALS.filter(h => terms.every(t => h.name.toLowerCase().split(/\s+/).some(w => w.startsWith(t))));
+    if (!matches.length) { noResults.hidden = false; return; }
+    for (const h of matches) {
+      const b = document.createElement("button");
+      b.className = "result";
+      let label = esc(h.name);
+      terms.forEach(t => { label = label.replace(new RegExp("\\b(" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "i"), "<mark>$1</mark>"); });
+      b.innerHTML = `<strong>${label}</strong><span>${esc(h.city)}</span>`;
+      b.addEventListener("click", () => { setHospital(h.name); show("hospital"); });
+      results.append(b);
+    }
+  }
+  input.addEventListener("input", renderResults);
+  clearBtn.addEventListener("click", () => { input.value = ""; renderResults(); input.focus(); });
+
+  // ---- Scan ----
+  const scanner = document.getElementById("scanner");
+  document.getElementById("simulate-scan").addEventListener("click", () => {
+    scanner.classList.add("success");
+    setHospital(HOSPITALS[0].name);
+    timers.push(setTimeout(() => show("hospital", { replace: true }), 900));
+  });
+
+  // ---- Access denied ----
+  const banner = document.getElementById("denied-banner");
+  function denied() {
+    banner.hidden = false;
+    // Return to the hospital screen, dropping the portal steps from history
+    while (state.stack.length && state.stack[state.stack.length - 1] !== "hospital") state.stack.pop();
+    if (!state.stack.length) state.stack = [startScreen(), "hospital"];
+    show("hospital", { back: true });
+  }
+  document.getElementById("simulate-fail").addEventListener("click", denied);
+  document.getElementById("deny-access").addEventListener("click", denied);
+  document.getElementById("denied-close").addEventListener("click", () => banner.hidden = true);
+
+  // ---- Per-screen enter hooks ----
+  const onEnter = {
+    search() { setTimeout(() => input.focus(), 50); renderResults(); },
+    scan() { scanner.classList.remove("success"); },
+    redirect() { banner.hidden = true; },
+    welcome() { banner.hidden = true; },
+    "welcome-back"() { banner.hidden = true; },
+    loading() {
+      const items = [...document.querySelectorAll("#loading-list li")];
+      const bar = document.getElementById("loading-bar");
+      items.forEach(li => li.classList.remove("done"));
+      bar.style.width = "0";
+      items.forEach((li, i) => timers.push(setTimeout(() => {
+        li.classList.add("done");
+        bar.style.width = ((i + 1) / items.length * 100) + "%";
+      }, 600 + i * 550)));
+      timers.push(setTimeout(() => {
+        state.returning = true;
+        state.stack = [];               // onboarding complete: tour is the new root
+        show("tour-welcome");
+      }, 600 + items.length * 550 + 500));
+    },
+  };
+
+  // ==== Health check-in ====
+  const WARN_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4M12 17h.01"/></svg>';
+  const checkin = { photos: 0, redressed: false, concern: false, done: false };
+  document.getElementById("checkin-date").textContent =
+    new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+  // -- Vitals (start empty; "–" until the patient enters a value) --
+  const VITALS = [
+    { id: "temp", label: "Body Temperature", value: null, start: 98.6, step: 0.1, decimals: 1, unit: "Fahrenheit",
+      min: 94, max: 106, range: "Range 94.0°F - 106.0°F", low: 96, high: 100.4, suffix: "°",
+      alert: "Outside the expected range. Your care team will see this when you submit." },
+    { id: "hr", label: "Heart Rate (BPM)", value: null, start: 75, step: 1, decimals: 0, unit: "BPM",
+      min: 30, max: 200, range: "Typical resting 60 - 100 BPM", low: 60, high: 100,
+      alert: "Outside the typical resting range. Rest for 5 minutes and measure again." },
+    { id: "sys", label: "Systolic Blood Pressure", value: null, start: 120, step: 1, decimals: 0, unit: "mmHg",
+      min: 60, max: 240, range: "Range 60 - 240 mmHg", low: 90, high: 160,
+      alert: "Outside the expected range. Your care team will see this when you submit." },
+    { id: "dia", label: "Diastolic Blood Pressure", value: null, start: 80, step: 1, decimals: 0, unit: "mmHg",
+      min: 40, max: 140, range: "Range 40 - 140 mmHg", low: 60, high: 100,
+      alert: "Outside the expected range. Your care team will see this when you submit." },
+  ];
+  const vitalsEl = document.getElementById("vitals");
+  const toC = f => (f - 32) * 5 / 9, toF = c => c * 9 / 5 + 32;
+  let tempUnit = "F";
+  const isEmpty = v => v.value === null;
+
+  VITALS.forEach(v => {
+    const card = document.createElement("div");
+    card.className = "card vital";
+    card.innerHTML = `
+      <div class="vital-head">
+        <p class="label-md" id="vl-${v.id}">${v.label}</p>
+        ${v.id === "temp" ? `<div class="chips" role="group" aria-label="Temperature unit">
+          <button class="chip" data-unit="F" aria-pressed="true">F°</button>
+          <button class="chip" data-unit="C" aria-pressed="false">C°</button></div>` : ""}
+      </div>
+      <div class="stepper">
+        <button type="button" data-dir="-1" aria-label="Decrease ${v.label}"><img src="assets/minus.svg" width="24" height="24" alt=""></button>
+        <div class="vital-value">
+          <input type="number" inputmode="decimal" placeholder="–" aria-labelledby="vl-${v.id}" aria-describedby="vr-${v.id} ve-${v.id}">
+          <p class="vital-unit"></p>
+        </div>
+        <button type="button" data-dir="1" aria-label="Increase ${v.label}"><img src="assets/plus.svg" width="24" height="24" alt=""></button>
+      </div>
+      <p class="vital-range" id="vr-${v.id}"></p>
+      <span class="sr-only" id="ve-${v.id}"></span>
+      <div class="vital-alert" role="status">${WARN_ICON}<span>${v.alert}</span></div>`;
+    vitalsEl.append(card);
+    v.el = card;
+    v.input = card.querySelector("input");
+
+    const [dec, inc] = card.querySelectorAll(".stepper button");
+    // First tap on an empty vital starts from a typical value instead of stepping
+    const bump = dir => isEmpty(v) ? setVital(v, startValue(v)) : setVital(v, v.value + dir * v.step);
+    for (const [btn, dir] of [[dec, -1], [inc, 1]]) {
+      let hold, repeat;
+      const stop = () => { clearTimeout(hold); clearInterval(repeat); };
+      btn.addEventListener("pointerdown", () => { hold = setTimeout(() => repeat = setInterval(() => bump(dir), 80), 400); });
+      ["pointerup", "pointerleave", "pointercancel"].forEach(ev => btn.addEventListener(ev, stop));
+      btn.addEventListener("click", () => bump(dir));
+    }
+    v.input.addEventListener("change", () => setVital(v, v.input.value.trim() === "" ? null : parseFloat(v.input.value)));
+    card.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => setTempUnit(ch.dataset.unit)));
+    renderVital(v);
+  });
+
+  function startValue(v) { return v.id === "temp" && tempUnit === "C" ? +toC(v.start).toFixed(1) : v.start; }
+  function tempLimits() {
+    const t = VITALS[0];
+    return tempUnit === "F"
+      ? { min: t.min, max: t.max, low: t.low, high: t.high, unit: "Fahrenheit", range: "Range 94.0°F - 106.0°F" }
+      : { min: +toC(t.min).toFixed(1), max: +toC(t.max).toFixed(1), low: +toC(t.low).toFixed(1), high: 38, unit: "Celsius", range: "Range 34.4°C - 41.1°C" };
+  }
+  function limits(v) { return v.id === "temp" ? tempLimits() : v; }
+  function setVital(v, n) {
+    const L = limits(v);
+    if (n === null) { v.value = null; v.baseF = null; renderVital(v); return; }
+    if (Number.isNaN(n)) { renderVital(v); return; }
+    v.value = Math.min(L.max, Math.max(L.min, +n.toFixed(v.decimals)));
+    if (v.id === "temp") v.baseF = tempUnit === "F" ? v.value : toF(v.value);
+    v.el.classList.remove("missing");
+    renderVital(v);
+  }
+  function renderVital(v) {
+    const L = limits(v);
+    const empty = isEmpty(v);
+    v.input.value = empty ? "" : v.value.toFixed(v.decimals);
+    v.input.min = L.min; v.input.max = L.max; v.input.step = v.step;
+    v.el.querySelector(".vital-unit").textContent = L.unit;
+    v.el.querySelector(".vital-range").textContent = L.range;
+    v.el.querySelector(`#ve-${v.id}`).textContent = empty ? "Not entered yet." : "";
+    const [dec, inc] = v.el.querySelectorAll(".stepper button");
+    dec.disabled = !empty && v.value <= L.min; inc.disabled = !empty && v.value >= L.max;
+    v.el.classList.toggle("empty", empty);
+    v.el.classList.toggle("out-of-range", !empty && (v.value < L.low || v.value >= L.high));
+  }
+  function setTempUnit(u) {
+    if (u === tempUnit) return;
+    const t = VITALS[0];
+    tempUnit = u;
+    // Convert from the last value entered in °F so toggling never drifts
+    if (!isEmpty(t)) { t.baseF ??= t.value; t.value = +(u === "C" ? toC(t.baseF) : t.baseF).toFixed(1); }
+    t.el.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c.dataset.unit === u)));
+    renderVital(t);
+  }
+  const vitalText = v => isEmpty(v) ? "–" : v.id === "temp" ? `${v.value.toFixed(1)}°${tempUnit}` : String(v.value);
+
+  // -- Photos --
+  const photosEl = document.getElementById("photos");
+  // Simulated "photo" of the incision, reused for the camera feed and thumbnails
+  const INCISION_PHOTO = (vb = "0 0 320 176") => `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="320" height="176" fill="#c9a08f"/><rect x="-20" y="10" width="360" height="160" rx="60" fill="#f0cfbe"/>
+    <ellipse cx="160" cy="150" rx="150" ry="24" fill="#e2b29d" opacity=".6"/>
+    <path d="M90 90 Q160 76 230 90" stroke="#a8473a" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M90 90 Q160 76 230 90" stroke="#d98b7c" stroke-width="16" fill="none" stroke-linecap="round" opacity=".35"/>
+    <g stroke="#7a3329" stroke-width="2.5" stroke-linecap="round"><path d="M108 78v20M131 74v20M154 72v20M177 72v20M200 74v20M220 79v18"/></g></svg>`;
+
+  function addPhoto() {
+    const time = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    const row = document.createElement("div");
+    row.className = "photo-row";
+    row.innerHTML = `<div class="photo-thumb" role="img" aria-label="Incision photo">${INCISION_PHOTO("90 50 140 60")}</div>
+      <span class="photo-meta">Incision photo · Today, ${time}</span>
+      <button class="icon-btn-outline" aria-label="Remove photo"><img src="assets/photo-action.svg" width="24" height="24" alt=""></button>`;
+    row.querySelector("button").addEventListener("click", () => { row.remove(); checkin.photos--; updateCheckin(); toast("Photo removed"); });
+    photosEl.append(row);
+    checkin.photos++;
+    updateCheckin();
+    toast("Photo added");
+  }
+
+  // -- Simulated camera app --
+  const cam = document.getElementById("camera");
+  const shutter = document.getElementById("cam-shutter");
+  let camTimer;
+  document.getElementById("cam-feed").innerHTML = INCISION_PHOTO();
+  function openCamera() {
+    lastFocus = document.activeElement;
+    cam.hidden = false;
+    cam.classList.remove("live", "captured");
+    shutter.disabled = true;
+    requestAnimationFrame(() => requestAnimationFrame(() => cam.classList.add("open")));
+    clearTimeout(camTimer);
+    camTimer = setTimeout(() => { cam.classList.add("live"); shutter.disabled = false; shutter.focus(); }, 900); // "launch" delay
+  }
+  function closeCamera() {
+    clearTimeout(camTimer);
+    cam.classList.remove("open");
+    setTimeout(() => { if (!cam.classList.contains("open")) { cam.hidden = true; lastFocus?.focus?.(); } }, 250);
+  }
+  document.getElementById("take-photo").addEventListener("click", openCamera);
+  document.getElementById("cam-close").addEventListener("click", closeCamera);
+  document.getElementById("cam-cancel").addEventListener("click", closeCamera);
+  document.getElementById("cam-flash").addEventListener("click", e => {
+    const b = e.currentTarget, on = b.getAttribute("aria-pressed") !== "true";
+    b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", on ? "Flash on" : "Flash off");
+    b.style.color = on ? "#ffd84d" : "#fff";
+  });
+  shutter.addEventListener("click", () => {
+    const fx = document.getElementById("cam-flash-fx");
+    fx.classList.remove("go"); void fx.offsetWidth; fx.classList.add("go");
+    cam.classList.add("captured");
+    document.getElementById("cam-use").focus();
+  });
+  document.getElementById("cam-retake").addEventListener("click", () => { cam.classList.remove("captured"); shutter.focus(); });
+  document.getElementById("cam-use").addEventListener("click", () => { closeCamera(); addPhoto(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !cam.hidden) closeCamera(); });
+
+  function updateCheckin() {
+    document.getElementById("take-photo").lastChild.textContent = checkin.photos ? "Take Another Photo" : "Take Photo";
+    document.getElementById("redress-done").hidden = !checkin.redressed;
+    if (checkin.photos) document.getElementById("photo-card").classList.remove("missing");
+    if (checkin.redressed) document.getElementById("redress-card").classList.remove("missing");
+    document.getElementById("start-redress").textContent = checkin.redressed ? "View Redressing Steps" : (sheetState.step > 0 ? "Resume Incision Redressing" : "Start Incision Redressing");
+    document.getElementById("sec-incision").classList.toggle("done", checkin.photos > 0 && checkin.redressed);
+    const missing = [!checkin.photos && "an incision photo", !checkin.redressed && "redressing"].filter(Boolean);
+    document.getElementById("slide-hint").textContent = checkin.done
+      ? "Today’s check-in has been sent. You can check in again tomorrow."
+      : missing.length
+        ? `Still to do: ${missing.join(" and ")}. You can still submit your vitals.`
+        : "Your vitals, photos and redressing go to your care team.";
+  }
+
+  // -- Step illustrations (inline SVG so they can animate and use tokens) --
+  const SKIN = `<rect x="36" y="34" width="248" height="104" rx="44" fill="var(--skin)"/>
+    <ellipse cx="160" cy="120" rx="100" ry="12" fill="var(--skin-shade)" opacity=".5"/>`;
+  const INCISION = `<path d="M100 86 Q160 74 220 86" stroke="var(--incision)" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <g stroke="var(--incision)" stroke-width="2.5" stroke-linecap="round" opacity=".85">
+      <path d="M116 75v18M138 71v18M160 70v18M182 71v18M204 75v18"/></g>`;
+  const ART = {
+    supplies: `<svg viewBox="0 0 320 176" role="img" aria-label="Supplies laid out: gauze, tape, saline, towel and a trash bag">
+      <g class="sup" data-i="0" style="--d:0">
+        <rect x="18" y="62" width="54" height="54" rx="6" fill="#fff" stroke="var(--border-default-default-hover)" stroke-width="2"/>
+        <path d="M31 62v54M45 62v54M59 62v54M18 76h54M18 90h54M18 104h54" stroke="var(--border-default-default)" stroke-width="1.5"/>
+        <g class="badge"><circle cx="70" cy="62" r="10" fill="var(--surface-success-default)"/><path d="M65 62l3.5 3.5L75 59" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+      <g class="sup" data-i="1" style="--d:1">
+        <circle cx="110" cy="92" r="24" fill="var(--surface-primary-subtle-hover)" stroke="var(--border-primary-default)" stroke-width="2"/>
+        <circle cx="110" cy="92" r="10" fill="var(--surface-primary-subtle)" stroke="var(--border-primary-default)" stroke-width="2"/>
+        <path d="M128 108l16 8" stroke="var(--border-primary-default)" stroke-width="6" stroke-linecap="round" opacity=".35"/>
+        <g class="badge"><circle cx="130" cy="70" r="10" fill="var(--surface-success-default)"/><path d="M125 70l3.5 3.5L135 67" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+      <g class="sup" data-i="2" style="--d:2">
+        <rect x="160" y="46" width="18" height="14" rx="3" fill="var(--surface-primary-default)"/>
+        <rect x="152" y="58" width="34" height="62" rx="9" fill="#fff" stroke="var(--border-default-default-hover)" stroke-width="2"/>
+        <rect x="157" y="78" width="24" height="22" rx="3" fill="var(--surface-primary-subtle-hover)"/>
+        <text x="169" y="93" text-anchor="middle" font-size="8" font-weight="600" fill="var(--text-primary-default)" font-family="Instrument Sans, sans-serif">NaCl</text>
+        <g class="badge"><circle cx="186" cy="56" r="10" fill="var(--surface-success-default)"/><path d="M181 56l3.5 3.5L191 53" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+      <g class="sup" data-i="3" style="--d:3">
+        <rect x="200" y="74" width="58" height="44" rx="6" fill="var(--surface-primary-subtle-hover)" stroke="var(--border-primary-default)" stroke-width="2"/>
+        <path d="M200 86h58M200 106h58" stroke="var(--border-primary-default)" stroke-width="2" opacity=".5"/>
+        <g class="badge"><circle cx="256" cy="72" r="10" fill="var(--surface-success-default)"/><path d="M251 72l3.5 3.5L261 69" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+      <g class="sup" data-i="4" style="--d:4">
+        <path d="M272 70h34l4 50a6 6 0 0 1-6 6h-30a6 6 0 0 1-6-6z" fill="var(--elevation-2)"/>
+        <path d="M280 70c4-10 14-10 18 0" stroke="var(--border-default-focus)" stroke-width="2.5" fill="none"/>
+        <g class="badge"><circle cx="306" cy="66" r="10" fill="var(--surface-success-default)"/><path d="M301 66l3.5 3.5L311 63" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+    </svg>`,
+    wash: `<svg viewBox="0 0 320 176" role="img" aria-label="Hands rubbing together under running water with soap bubbles">
+      <path d="M96 40h52a8 8 0 0 1 8 8v8h-14v-2H96z" fill="var(--border-default-focus)"/>
+      <g fill="var(--surface-primary-default)" opacity=".55">
+        <circle class="drop" style="--d:0" cx="149" cy="62" r="3"/><circle class="drop" style="--d:1" cx="147" cy="62" r="2.5"/><circle class="drop" style="--d:2" cx="151" cy="62" r="2"/></g>
+      <g class="rub-l"><g transform="rotate(16 120 160)" fill="var(--skin)">
+        <rect x="100" y="104" width="42" height="56" rx="16"/>
+        <rect x="100" y="80" width="9" height="38" rx="4.5"/><rect x="111" y="74" width="9" height="42" rx="4.5"/>
+        <rect x="122" y="76" width="9" height="40" rx="4.5"/><rect x="133" y="84" width="9" height="34" rx="4.5"/>
+        <rect x="140" y="112" width="10" height="28" rx="5" transform="rotate(-30 145 126)"/></g></g>
+      <g class="rub-r"><g transform="rotate(-16 176 160)" fill="var(--skin-shade)">
+        <rect x="154" y="104" width="42" height="56" rx="16"/>
+        <rect x="154" y="84" width="9" height="34" rx="4.5"/><rect x="165" y="76" width="9" height="40" rx="4.5"/>
+        <rect x="176" y="74" width="9" height="42" rx="4.5"/><rect x="187" y="80" width="9" height="38" rx="4.5"/>
+        <rect x="146" y="112" width="10" height="28" rx="5" transform="rotate(30 151 126)"/></g></g>
+      <g fill="#fff" stroke="var(--border-primary-default)" stroke-width="1.5" opacity=".9">
+        <circle class="bubble" style="--d:0" cx="132" cy="110" r="7"/><circle class="bubble" style="--d:1" cx="166" cy="104" r="5"/>
+        <circle class="bubble" style="--d:2" cx="150" cy="118" r="6"/><circle class="bubble" style="--d:3" cx="184" cy="114" r="4"/></g>
+      <circle cx="262" cy="96" r="30" fill="#fff"/>
+      <circle cx="262" cy="96" r="26" fill="none" stroke="var(--surface-primary-subtle-hover)" stroke-width="6"/>
+      <circle class="timer-ring" id="hand-timer-ring" cx="262" cy="96" r="26" fill="none" stroke="var(--surface-primary-default)" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="0"/>
+      <text id="hand-timer" x="262" y="103" text-anchor="middle" font-size="20" font-weight="600" fill="var(--text-default-default)" font-family="Instrument Sans, sans-serif">20</text>
+      <text x="262" y="144" text-anchor="middle" font-size="11" fill="var(--text-default-secondary)" font-family="Instrument Sans, sans-serif">seconds</text>
+    </svg>`,
+    remove: `<svg viewBox="0 0 320 176" role="img" aria-label="An old dressing being peeled slowly off toward the incision">
+      ${SKIN}${INCISION}
+      <g class="peel">
+        <rect x="88" y="56" width="140" height="58" rx="8" fill="#fff" stroke="var(--border-default-default-hover)" stroke-width="2"/>
+        <rect x="104" y="66" width="108" height="38" rx="5" fill="var(--surface-default-secondary)"/>
+        <path d="M120 84 Q160 78 200 84" stroke="var(--incision)" stroke-width="5" opacity=".18" fill="none"/></g>
+      <path d="M262 64c-10-14-30-14-38-6" stroke="var(--border-primary-default)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="4 5"/>
+      <path d="M226 52l-4 8 9 1" stroke="var(--border-primary-default)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    inspect: `<svg viewBox="0 0 320 176" role="img" aria-label="A magnifying glass moving along the incision to check for signs of infection">
+      ${SKIN}${INCISION}
+      <g class="scan">
+        <circle cx="160" cy="80" r="28" fill="#fff" fill-opacity=".35" stroke="var(--surface-primary-default)" stroke-width="5"/>
+        <path d="M180 100l22 22" stroke="var(--surface-primary-default)" stroke-width="8" stroke-linecap="round"/></g>
+    </svg>`,
+    clean: `<svg viewBox="0 0 320 176" role="img" aria-label="A gauze pad gently dabbing along the incision">
+      ${SKIN}${INCISION}
+      <g fill="var(--surface-primary-subtle-hover)" opacity=".8">
+        <circle cx="112" cy="98" r="4"/><circle cx="166" cy="96" r="3"/><circle cx="210" cy="99" r="4"/></g>
+      <g class="dab">
+        <rect x="138" y="52" width="44" height="40" rx="6" fill="#fff" stroke="var(--border-default-default-hover)" stroke-width="2"/>
+        <path d="M149 52v40M160 52v40M171 52v40M138 65h44M138 79h44" stroke="var(--border-default-default)" stroke-width="1.5"/></g>
+    </svg>`,
+    apply: `<svg viewBox="0 0 320 176" role="img" aria-label="A new dressing placed over the incision and taped on all four sides">
+      ${SKIN}${INCISION}
+      <g class="apply">
+        <rect x="92" y="56" width="136" height="56" rx="8" fill="#fff" stroke="var(--border-default-default-hover)" stroke-width="2"/>
+        <rect x="106" y="66" width="108" height="36" rx="5" fill="var(--surface-default-secondary)"/></g>
+      <g fill="var(--surface-primary-subtle-hover)" stroke="var(--border-primary-default)" stroke-width="1.5">
+        <rect class="tape" style="--d:0" x="80" y="68" width="24" height="32" rx="3"/>
+        <rect class="tape" style="--d:1" x="216" y="68" width="24" height="32" rx="3"/>
+        <rect class="tape" style="--d:2" x="136" y="46" width="48" height="16" rx="3"/>
+        <rect class="tape" style="--d:3" x="136" y="106" width="48" height="16" rx="3"/></g>
+    </svg>`,
+    done: `<svg viewBox="0 0 320 176" role="img" aria-label="Incision covered with a clean dressing and a success check mark">
+      ${SKIN}
+      <rect x="92" y="56" width="136" height="56" rx="8" fill="#fff" stroke="var(--border-default-default-hover)" stroke-width="2"/>
+      <rect x="106" y="66" width="108" height="36" rx="5" fill="var(--surface-default-secondary)"/>
+      <g fill="var(--surface-primary-subtle-hover)" stroke="var(--border-primary-default)" stroke-width="1.5">
+        <rect x="80" y="68" width="24" height="32" rx="3"/><rect x="216" y="68" width="24" height="32" rx="3"/>
+        <rect x="136" y="46" width="48" height="16" rx="3"/><rect x="136" y="106" width="48" height="16" rx="3"/></g>
+      <g class="done-check"><circle cx="262" cy="46" r="22" fill="var(--surface-success-default)"/>
+        <path d="M251 46l7 7 14-14" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+    </svg>`,
+  };
+
+  // -- Redressing sheet --
+  const STEPS = [
+    { title: "Gather your supplies", confirm: "I Have My Supplies", art: "supplies", caption: "Lay everything out first",
+      info: "A general guide. Always follow your surgeon’s or nurse’s instructions.",
+      checklist: ["Gauze or dressing", "Medical tape", "Saline or cleanser", "Clean towel", "Trash bag"] },
+    { title: "Wash your hands", confirm: "I’ve Washed My Hands", art: "wash", caption: "Scrub for 20 seconds",
+      list: ["Use soap and warm water. Scrub palms, backs, between fingers and under nails.", "Dry with a clean towel. Put on gloves if you were given some."] },
+    { title: "Remove the old dressing", confirm: "Old Dressing Removed", art: "remove", caption: "Peel slowly toward the incision",
+      list: ["Loosen the tape, then peel slowly toward the incision.", "If it sticks, wet it with a little saline. Don’t pull.", "Bin the old dressing and wash your hands again."] },
+    { title: "Check your incision", confirm: "Continue", art: "inspect", caption: "Look along the whole incision", inspect: true,
+      list: ["More redness, swelling or warmth", "Yellow, green or cloudy drainage", "A bad smell", "Edges pulling apart", "Fever of 100.4°F (38°C) or higher"] },
+    { title: "Clean the area", confirm: "Area Is Clean and Dry", art: "clean", caption: "Dab gently, don’t scrub",
+      list: ["Only clean it if your care team told you to.", "Dab gently with saline or your cleanser, then pat dry.", "No lotion, powder or ointment unless prescribed."] },
+    { title: "Apply the new dressing", confirm: "New Dressing Applied", art: "apply", caption: "Cover fully, tape all 4 sides",
+      list: ["Hold the new dressing by its edges only.", "Cover the whole incision.", "Tape down all four sides, then wash your hands."] },
+  ];
+  const sheetEl = document.getElementById("sheet");
+  const sheetBody = document.getElementById("sheet-body");
+  const sheetActions = document.getElementById("sheet-actions");
+  const sheetState = { step: 0, checks: new Set(), concern: null, complete: false };
+  let lastFocus = null, handTimer = null;
+
+  function openSheet() {
+    lastFocus = document.activeElement;
+    sheetEl.hidden = false;
+    requestAnimationFrame(() => requestAnimationFrame(() => sheetEl.classList.add("open")));
+    renderStep();
+  }
+  function closeSheet() {
+    clearInterval(handTimer);
+    sheetEl.classList.remove("open");
+    setTimeout(() => { if (!sheetEl.classList.contains("open")) { sheetEl.hidden = true; lastFocus?.focus?.(); } }, 300);
+    updateCheckin();
+  }
+  document.getElementById("start-redress").addEventListener("click", () => {
+    if (checkin.redressed) { sheetState.step = 0; sheetState.complete = false; }
+    openSheet();
+  });
+  sheetEl.querySelectorAll("[data-sheet-close]").forEach(b => b.addEventListener("click", closeSheet));
+  document.getElementById("sheet-back").addEventListener("click", () => { if (sheetState.step > 0) { sheetState.step--; renderStep("prev"); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !sheetEl.hidden) closeSheet(); });
+
+  const demo = (art, caption) => `<div class="demo">${ART[art]}${caption ? `<span class="demo-caption">${caption}</span>` : ""}</div>`;
+
+  function startHandTimer() {
+    clearInterval(handTimer);
+    const ring = document.getElementById("hand-timer-ring"), label = document.getElementById("hand-timer");
+    if (!ring) return;
+    let left = 20;
+    const tick = () => {
+      label.textContent = left;
+      ring.style.strokeDashoffset = String(163.4 * (1 - left / 20));
+      if (left === 0) { clearInterval(handTimer); label.textContent = "✓"; ring.style.stroke = "var(--surface-success-default)"; }
+      left--;
+    };
+    tick(); handTimer = setInterval(tick, 1000);
+  }
+
+  function renderStep(dir = "next") {
+    clearInterval(handTimer);
+    const total = STEPS.length;
+    const back = document.getElementById("sheet-back");
+    sheetBody.classList.remove("enter-next", "enter-prev");
+    void sheetBody.offsetWidth; // restart the page transition
+    sheetBody.classList.add(dir === "prev" ? "enter-prev" : "enter-next");
+    sheetBody.scrollTop = 0;
+
+    if (sheetState.complete) {
+      document.getElementById("sheet-step-label").textContent = `All ${total} steps done`;
+      document.getElementById("sheet-bar").style.width = "100%";
+      back.style.visibility = "hidden";
+      sheetBody.innerHTML = `${demo("done")}
+        <h2 class="step-title" tabindex="-1">Incision redressed</h2>
+        <p class="body-md">Nice work. Your care team will see that you redressed your incision today.</p>
+        ${sheetState.concern ? `<div class="callout warn">${WARN_ICON}<p>You noted a possible sign of infection. Please call your care team if you haven’t already.</p></div>` : ""}`;
+      sheetActions.innerHTML = `<button class="btn btn-filled" id="sheet-finish">Back to Check-In</button>`;
+      document.getElementById("sheet-finish").addEventListener("click", closeSheet);
+      sheetBody.querySelector("h2").focus({ preventScroll: true });
+      return;
+    }
+    const s = STEPS[sheetState.step];
+    document.getElementById("sheet-step-label").textContent = `Step ${sheetState.step + 1} of ${total}`;
+    document.getElementById("sheet-bar").style.width = `${(sheetState.step / total) * 100}%`;
+    back.style.visibility = sheetState.step ? "visible" : "hidden";
+
+    let html = demo(s.art, s.caption) + `<h2 class="step-title" tabindex="-1">${s.title}</h2>`;
+    if (s.info) html += `<div class="callout info"><p>${s.info}</p></div>`;
+    if (s.checklist) {
+      html += `<div class="check-grid">` +
+        s.checklist.map((c, i) => `<label class="check-row"><input type="checkbox" data-i="${i}" ${sheetState.checks.has(i) ? "checked" : ""}><span></span>${c}</label>`).join("") + `</div>`;
+    }
+    if (s.inspect) {
+      html += `<p class="body-md">Do you notice any of these?</p><ul class="step-list">${s.list.map(l => `<li>${l}</li>`).join("")}</ul>
+        <div class="choices" role="group" aria-label="Do you notice any of these signs?">
+          <button class="choice" data-concern="yes" aria-pressed="${sheetState.concern === true}">Yes</button>
+          <button class="choice" data-concern="no" aria-pressed="${sheetState.concern === false}">No</button>
+        </div>
+        <div class="callout error" id="concern-callout" ${sheetState.concern === true ? "" : "hidden"}>${WARN_ICON}<div class="stack-8"><p><strong>These can be signs of infection.</strong> Call your care team now. You can finish redressing while you wait.</p>
+          <button class="btn btn-outline" data-call style="background:var(--surface-default-default)">Call 1-800-555-0199</button></div></div>`;
+    } else if (s.list) {
+      html += `<ul class="step-list">${s.list.map(l => `<li>${l}</li>`).join("")}</ul>`;
+    }
+    sheetBody.innerHTML = html;
+
+    const syncSupplies = () => sheetBody.querySelectorAll(".sup").forEach(g => g.classList.toggle("got", sheetState.checks.has(+g.dataset.i)));
+    if (s.art === "supplies") syncSupplies();
+    if (s.art === "wash") startHandTimer();
+
+    const last = sheetState.step === total - 1;
+    sheetActions.innerHTML = `<button class="btn btn-filled" id="sheet-next">${s.confirm}</button>`;
+    const next = document.getElementById("sheet-next");
+    const gate = () => {
+      if (s.checklist) next.disabled = sheetState.checks.size < s.checklist.length;
+      if (s.inspect) next.disabled = sheetState.concern === null;
+    };
+    sheetBody.querySelectorAll(".check-row input").forEach(cb => cb.addEventListener("change", () => {
+      cb.checked ? sheetState.checks.add(+cb.dataset.i) : sheetState.checks.delete(+cb.dataset.i);
+      syncSupplies(); gate();
+    }));
+    sheetBody.querySelectorAll(".choice").forEach(b => b.addEventListener("click", () => {
+      sheetState.concern = b.dataset.concern === "yes";
+      checkin.concern = sheetState.concern; // flag right away, even if redressing isn't finished
+      sheetBody.querySelectorAll(".choice").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      document.getElementById("concern-callout").hidden = !sheetState.concern;
+      gate();
+    }));
+    gate();
+    next.addEventListener("click", () => {
+      if (last) { sheetState.complete = true; checkin.redressed = true; checkin.concern = !!sheetState.concern; }
+      else sheetState.step++;
+      renderStep("next");
+    });
+    sheetBody.querySelector("h2").focus({ preventScroll: true });
+  }
+
+  // -- Slide to confirm (reusable: page slider + the one inside the missing-info dialog) --
+  function makeSlider(root, onComplete) {
+    const thumb = root.querySelector(".slide-thumb");
+    const fill = root.querySelector(".slide-fill");
+    const label = root.querySelector(".slide-label");
+    const text = label.textContent;
+    let dragX = null, offset = 0, locked = false, disabled = false;
+    const maxX = () => root.clientWidth - thumb.offsetWidth - 8;
+    function setOffset(x) {
+      offset = Math.max(0, Math.min(maxX(), x));
+      thumb.style.transform = `translateX(${offset}px)`;
+      fill.style.width = `${offset + thumb.offsetWidth / 2 + 4}px`;
+    }
+    const api = {
+      reset() { locked = false; root.classList.add("snap"); root.classList.remove("complete", "loading"); root.removeAttribute("aria-busy"); setOffset(0); fill.style.width = "0"; label.textContent = text; },
+      loading() { locked = true; root.classList.add("snap", "loading"); root.setAttribute("aria-busy", "true"); setOffset(maxX()); label.textContent = "Sending…"; },
+      complete(msg) { locked = true; root.classList.remove("loading"); root.removeAttribute("aria-busy"); root.classList.add("complete"); setOffset(maxX()); label.textContent = msg; },
+      lock() { locked = true; },
+      setDisabled(d) { disabled = d; root.classList.toggle("disabled", d); thumb.setAttribute("aria-disabled", String(d)); },
+    };
+    const fire = () => { api.loading(); onComplete(api); };
+    thumb.addEventListener("pointerdown", e => { if (locked || disabled) return; dragX = e.clientX - offset; root.classList.remove("snap"); thumb.setPointerCapture(e.pointerId); });
+    thumb.addEventListener("pointermove", e => { if (dragX !== null) setOffset(e.clientX - dragX); });
+    const release = () => {
+      if (dragX === null) return;
+      dragX = null; root.classList.add("snap");
+      offset >= maxX() * 0.85 ? fire() : (setOffset(0), fill.style.width = "0");
+    };
+    thumb.addEventListener("pointerup", release);
+    thumb.addEventListener("pointercancel", release);
+    thumb.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && !locked && !disabled) { e.preventDefault(); fire(); } });
+    thumb.addEventListener("click", e => e.preventDefault());
+    return api;
+  }
+
+  // Everything the check-in can be missing, in page order. `el` gets highlighted, `focus` is where Go Back lands.
+  function missingItems() {
+    return [
+      ...VITALS.filter(isEmpty).map(v => ({ label: v.label, el: v.el, focus: v.input })),
+      ...(!checkin.photos ? [{ label: "Incision Photo", el: document.getElementById("photo-card"), focus: document.getElementById("take-photo") }] : []),
+      ...(!checkin.redressed ? [{ label: "Incision Redressing", el: document.getElementById("redress-card"), focus: document.getElementById("start-redress") }] : []),
+    ];
+  }
+  function clearMissingMarks() { document.querySelectorAll(".missing").forEach(el => el.classList.remove("missing")); }
+
+  // Page slider: send, or ask about missing information first
+  const mainSlider = makeSlider(document.getElementById("slide"), s => {
+    timers.push(setTimeout(() => {
+      const missing = missingItems();
+      missing.length ? openMissing(missing) : submitCheckin();
+    }, 900));
+  });
+
+  // -- "Some Information is Missing" dialog, two steps: what's missing (423:1639) → reason (424:13175) --
+  const missingModal = document.getElementById("missing-modal");
+  const reasonRadios = [...missingModal.querySelectorAll('input[name="missing-reason"]')];
+  const reasonOther = document.getElementById("reason-other");
+  const reasonOtherText = document.getElementById("reason-other-text");
+  const REASON_TEXT = { equipment: "Didn’t have what was needed", unwell: "Didn’t feel well enough" };
+  const pickedReason = () => reasonRadios.find(r => r.checked)?.value;
+  function reasonText() {
+    const r = pickedReason();
+    return r === "other" ? reasonOtherText.value.trim() : REASON_TEXT[r];
+  }
+  // A reason is required; "Something else" also needs a few words
+  const syncReason = () => {
+    reasonOther.hidden = pickedReason() !== "other";
+    modalSlider.setDisabled(!reasonText());
+  };
+  reasonRadios.forEach(r => r.addEventListener("change", () => {
+    syncReason();
+    if (r.value === "other" && r.checked) setTimeout(() => reasonOtherText.focus(), 0);
+  }));
+  reasonOtherText.addEventListener("input", syncReason);
+  const modalSlider = makeSlider(missingModal.querySelector(".slide"), () => {
+    timers.push(setTimeout(() => {
+      checkin.reason = reasonText();
+      checkin.unwell = pickedReason() === "unwell";
+      closeMissing({ sending: true }); submitCheckin();
+    }, 900));
+  });
+  function openMissing(missing) {
+    document.getElementById("missing-list").innerHTML = missing.map(m => `<li>${m.label}</li>`).join("");
+    clearMissingMarks();
+    missing.forEach(m => m.el.classList.add("missing"));
+    missingModal.hidden = false;
+    modalSlider.reset();
+    reasonRadios.forEach(r => { r.checked = false; });
+    reasonOtherText.value = "";
+    syncReason();
+    showMissingStep(1, { focus: false });
+    requestAnimationFrame(() => requestAnimationFrame(() => missingModal.classList.add("open")));
+    setTimeout(() => document.getElementById("missing-title").focus({ preventScroll: true }), 60);
+  }
+  function closeMissing({ sending = false, dismiss = false } = {}) {
+    missingModal.classList.remove("open");
+    setTimeout(() => { if (!missingModal.classList.contains("open")) missingModal.hidden = true; }, 220);
+    if (sending) return;
+    // Close (X / scrim / Esc): cancel the send and stay where the patient was; highlights stay as a reminder
+    if (dismiss) { mainSlider.reset(); document.getElementById("slide-thumb").focus({ preventScroll: true }); return; }
+    // Go back: reset the page slider and take the patient to the first missing item
+    mainSlider.reset();
+    const first = missingItems()[0];
+    if (first) { first.el.scrollIntoView({ behavior: "smooth", block: "center" }); setTimeout(() => first.focus.focus({ preventScroll: true }), 350); }
+  }
+  document.getElementById("missing-back").addEventListener("click", () => closeMissing());
+  document.getElementById("missing-scrim").addEventListener("click", () => closeMissing({ dismiss: true }));
+  document.getElementById("missing-close").addEventListener("click", () => closeMissing({ dismiss: true }));
+  // Escape works like the close button
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !missingModal.hidden) closeMissing({ dismiss: true }); });
+  function showMissingStep(n, { focus = true } = {}) {
+    const one = document.getElementById("missing-step-1"), two = document.getElementById("missing-step-2");
+    one.hidden = n !== 1; two.hidden = n !== 2;
+    const shown = n === 1 ? one : two;
+    shown.classList.remove("enter"); void shown.offsetWidth; shown.classList.add("enter");
+    const dialog = missingModal.querySelector(".modal");
+    dialog.setAttribute("aria-labelledby", n === 1 ? "missing-title" : "reason-title");
+    dialog.setAttribute("aria-describedby", n === 1 ? "missing-desc" : "missing-reason-hint");
+    dialog.scrollTop = 0;
+    if (n === 2) requestAnimationFrame(() => modalSlider.reset());
+    if (focus) document.getElementById(n === 1 ? "missing-cant" : "reason-title").focus({ preventScroll: true });
+  }
+  document.getElementById("missing-cant").addEventListener("click", () => showMissingStep(2));
+  document.getElementById("reason-back").addEventListener("click", () => showMissingStep(1));
+
+  function submitCheckin() {
+    if (checkin.done) return;
+    mainSlider.complete("Check-In Sent");
+    checkin.done = true;
+    checkin.missing = VITALS.filter(isEmpty).map(v => v.label);
+    const notIncluded = missingItems().map(m => m.label);
+    const flagged = checkin.concern || checkin.unwell || VITALS.some(v => v.el.classList.contains("out-of-range"));
+    document.getElementById("dash-checkin-done").hidden = false;
+    document.getElementById("dash-checkin-btn").textContent = "View Today’s Check-In";
+    document.getElementById("dash-checkin-text").textContent = flagged
+      ? "Sent. Your care team will follow up on something you reported."
+      : "Sent to your care team.";
+    // Lock the check-in: no more steppers, unit chips, Take Photo or photo removal
+    const sentAt = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    byName.checkin.classList.add("submitted");
+    VITALS.forEach(v => { v.input.readOnly = true; });
+    clearMissingMarks();
+    document.getElementById("sent-banner").textContent = `Sent to your care team at ${sentAt}`;
+    document.getElementById("sent-flag").hidden = !flagged;
+    document.getElementById("sent-flag-text").textContent = checkin.unwell && !checkin.concern
+      ? "You said you didn’t feel well enough to finish. Your care team will call you today. If it’s an emergency, call 911."
+      : "Something you reported needs a closer look. Your care team will follow up today.";
+    // Confirmation copy names only what was actually sent
+    const sent = [VITALS.some(v => !isEmpty(v)) && "vitals", checkin.photos && (checkin.photos === 1 ? "incision photo" : "incision photos"), checkin.redressed && "redressing"].filter(Boolean);
+    document.getElementById("sent-text").textContent = sent.length
+      ? `Your care team will review your ${sent.length > 1 ? sent.slice(0, -1).join(", ") + " and " + sent.at(-1) : sent[0]}.`
+      : "Your care team will see that you checked in today.";
+    const sm = document.getElementById("sent-missing");
+    sm.hidden = !notIncluded.length;
+    sm.querySelector("span").textContent = `Not included: ${notIncluded.join(", ")}. Reason: ${checkin.reason}.`;
+    timers.push(setTimeout(() => { state.stack = ["dashboard"]; show("checkin-sent"); }, 500));
+  }
+
+  onEnter.checkin = () => {
+    updateCheckin();
+    if (!checkin.done) requestAnimationFrame(() => mainSlider.reset());
+    else mainSlider.lock();
+  };
+
+  // Prototype control: clear today's check-in so the next test task starts fresh
+  function resetCheckin() {
+    Object.assign(checkin, { photos: 0, redressed: false, concern: false, done: false, unwell: false, reason: undefined, missing: undefined });
+    Object.assign(sheetState, { step: 0, concern: null, complete: false });
+    sheetState.checks.clear();
+    setTempUnit("F");
+    VITALS.forEach(v => { v.input.readOnly = false; setVital(v, null); });
+    photosEl.replaceChildren();
+    clearMissingMarks();
+    byName.checkin.classList.remove("submitted");
+    mainSlider.reset();
+    document.getElementById("dash-checkin-done").hidden = true;
+    document.getElementById("dash-checkin-btn").textContent = "Start Check-In";
+    document.getElementById("dash-checkin-text").textContent = "Vitals, an incision photo and redressing";
+    updateCheckin();
+  }
+
+  // -- Check-in sent confirmation: animated check, then back to the dashboard --
+  function goDashboard() { state.stack = []; show("dashboard", { back: true }); }
+  document.getElementById("sent-dashboard").addEventListener("click", goDashboard);
+  onEnter["checkin-sent"] = () => {
+    const page = byName["checkin-sent"];
+    // restart the check animation each time the page is shown
+    page.querySelectorAll(".sent-check *").forEach(n => { n.style.animation = "none"; void n.getBoundingClientRect(); n.style.animation = ""; });
+    const bar = document.getElementById("redirect-bar");
+    bar.classList.remove("run"); void bar.offsetWidth;
+    timers.push(setTimeout(() => bar.classList.add("run"), 1000));
+    timers.push(setTimeout(goDashboard, 4300));
+  };
+
+  // ==== Menu drawer ====
+  const drawer = document.getElementById("drawer");
+  const menuBtn = document.getElementById("menu-open");
+  let drawerTimer;
+  function openDrawer() {
+    clearTimeout(drawerTimer);
+    drawer.hidden = false;
+    menuBtn.setAttribute("aria-expanded", "true");
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      drawer.classList.add("open");
+      document.querySelector(".screen.active")?.classList.add("pushed");
+    }));
+    setTimeout(() => document.getElementById("drawer-title").focus({ preventScroll: true }), 50);
+  }
+  function closeDrawer({ instant = false } = {}) {
+    const page = document.querySelector(".screen.pushed");
+    drawer.classList.remove("open");
+    menuBtn.setAttribute("aria-expanded", "false");
+    if (page) { page.classList.remove("pushed"); if (!instant) page.classList.add("unpushing"); }
+    const done = () => { drawer.hidden = true; page?.classList.remove("unpushing"); };
+    if (instant) done(); else { drawerTimer = setTimeout(done, 280); menuBtn.focus({ preventScroll: true }); }
+  }
+  menuBtn.addEventListener("click", openDrawer);
+  document.getElementById("drawer-scrim").addEventListener("click", () => closeDrawer());
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !drawer.hidden) closeDrawer(); });
+  drawer.querySelectorAll("[data-menu]").forEach(b => b.addEventListener("click", () => {
+    closeDrawer({ instant: true });
+    show(b.dataset.menu);
+  }));
+
+  // ==== Check-in history ====
+  const ICON_OK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  const ICON_WARN = WARN_ICON.replace('width="16" height="16"', 'width="14" height="14"');
+  const CHEVRON = '<img src="assets/chevron-right.svg" width="24" height="24" alt="">';
+  const dayLabel = offset => {
+    const d = new Date(); d.setDate(d.getDate() - offset);
+    return offset === 0 ? "Today" : offset === 1 ? "Yesterday" : d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+  };
+  // Flagged values get an icon and hidden text, not just color
+  const fv = (flag, val) => flag ? `<b class="flag">${ICON_WARN} ${val}<span class="sr-only"> (outside expected range)</span></b>` : `<b>${val}</b>`;
+  function renderHistory() {
+    const v = Object.fromEntries(VITALS.map(x => [x.id, x]));
+    const todayFlag = checkin.done && (checkin.concern || VITALS.some(x => x.el.classList.contains("out-of-range")));
+    const entries = [
+      checkin.done
+        ? { day: 0, recovery: 3, status: todayFlag ? "warn" : "ok",
+            temp: vitalText(v.temp), hr: vitalText(v.hr), bp: `${vitalText(v.sys)}/${vitalText(v.dia)}`,
+            flags: VITALS.filter(x => x.el.classList.contains("out-of-range")).map(x => x.id),
+            meta: [...(checkin.missing?.length ? [`Not logged: ${checkin.missing.join(", ")}`] : []), `${checkin.photos} incision photo${checkin.photos === 1 ? "" : "s"}`, checkin.redressed ? "Incision redressed" : "Redressing not logged", ...(checkin.reason ? [`Reason for missing items: ${checkin.reason}`] : []),
+              ...(checkin.concern ? ["You reported a possible sign of infection"] : [])] }
+        : { day: 0, recovery: 3, status: "due" },
+      { day: 1, recovery: 2, status: "ok", temp: "99.1°F", hr: 84, bp: "118/72", flags: [], meta: ["1 incision photo", "Incision redressed"] },
+      { day: 2, recovery: 1, status: "warn", temp: "100.6°F", hr: 92, bp: "124/78", flags: ["temp"],
+        meta: ["2 incision photos", "Incision redressed", "John Smith, RN called you back at 2:15 PM"] },
+    ];
+    const pill = s => s === "ok" ? `<span class="pill ok">${ICON_OK}Sent</span>`
+      : s === "warn" ? `<span class="pill warn">${ICON_WARN}Reviewed</span>`
+      : `<span class="pill missed">Due today</span>`;
+    document.getElementById("history-list").innerHTML = entries.map(e => e.status === "due"
+      ? `<div class="card history-card"><div class="row" style="justify-content:space-between"><div class="stack-4"><p class="label-md">${dayLabel(e.day)}</p><p class="body-md">Recovery Day ${e.recovery}</p></div>${pill("due")}</div>
+          <button class="btn btn-filled" data-go="checkin">Start Today’s Check-In</button></div>`
+      : `<details class="card history-card" ${e.day === 0 ? "open" : ""}>
+          <summary><span class="stack-4"><span class="label-md">${dayLabel(e.day)}</span><span class="body-md">Recovery Day ${e.recovery}</span></span>
+            <span class="row" style="gap:8px">${pill(e.status)}${CHEVRON}</span></summary>
+          <div class="vitals-grid">
+            <div><small>Temperature</small>${fv(e.flags.includes("temp"), e.temp)}</div>
+            <div><small>Heart rate</small>${fv(e.flags.includes("hr"), e.hr)}</div>
+            <div><small>Blood pressure</small>${fv(e.flags.some(f => f === "sys" || f === "dia"), e.bp)}</div>
+          </div>
+          <ul class="history-meta">${e.meta.map(m => `<li>${m}</li>`).join("")}</ul>
+        </details>`).join("");
+    const done = entries.filter(e => e.status !== "due").length;
+    document.getElementById("hist-streak").textContent = `${done} of 3 days`;
+    document.getElementById("hist-flags").textContent = entries.filter(e => e.status === "warn").length;
+  }
+  onEnter.history = renderHistory;
+
+  // ==== Switches give feedback ====
+  document.querySelectorAll('input[role="switch"]').forEach(sw => sw.addEventListener("change", () =>
+    toast(`${sw.dataset.note} ${sw.checked ? "on" : "off"}`)));
+
+  // ---- Carousel dots ----
+  document.querySelectorAll(".dots").forEach(d => {
+    const step = +d.dataset.step;
+    for (let i = 1; i <= 5; i++) { const dot = document.createElement("i"); if (i === step) dot.className = "on"; d.append(dot); }
+  });
+
+  // ---- Toast ----
+  const toastEl = document.getElementById("toast");
+  let toastTimer;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+
+  // ---- Prototype panel ----
+  const list = document.getElementById("screen-list");
+  screens.forEach(s => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.dataset.jump = s.dataset.screen;
+    b.innerHTML = `${s.dataset.title}${"placeholder" in s.dataset ? "<em>stand-in</em>" : ""}`;
+    b.addEventListener("click", () => {
+      if (s.dataset.screen === "welcome-back") state.returning = true;
+      if (s.dataset.screen === "welcome") state.returning = false;
+      state.stack = [];
+      show(s.dataset.screen);
+    });
+    li.append(b); list.append(li);
+  });
+  function renderPanel() {
+    const cur = state.stack[state.stack.length - 1];
+    list.querySelectorAll("button").forEach(b => b.setAttribute("aria-current", b.dataset.jump === cur ? "true" : "false"));
+  }
+  document.getElementById("restart").addEventListener("click", () => { state.returning = false; restart(); });
+  document.getElementById("reset-checkin").addEventListener("click", () => {
+    resetCheckin();
+    state.stack = [];
+    show("dashboard");
+    toast("Today’s check-in reset");
+  });
+
+  show("welcome");
+})();
+</script>
+</body>
+</html>
