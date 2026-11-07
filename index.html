@@ -1215,7 +1215,6 @@
         <div class="slide-label" id="slide-label">Slide to Confirm Check-In</div>
         <button class="slide-thumb" id="slide-thumb" aria-label="Confirm check-in. Drag right, or press Enter."><img src="assets/slider-thumb.svg" width="24" height="24" alt=""></button>
       </div>
-      <p class="slide-hint" id="slide-hint">Your vitals, photos and redressing go to your care team.</p>
     </div>
   </section>
 
@@ -1858,12 +1857,6 @@
     if (checkin.redressed) document.getElementById("redress-card").classList.remove("missing");
     document.getElementById("start-redress").textContent = checkin.redressed ? "View Redressing Steps" : (sheetState.step > 0 ? "Resume Incision Redressing" : "Start Incision Redressing");
     document.getElementById("sec-incision").classList.toggle("done", checkin.photos > 0 && checkin.redressed);
-    const missing = [!checkin.photos && "an incision photo", !checkin.redressed && "redressing"].filter(Boolean);
-    document.getElementById("slide-hint").textContent = checkin.done
-      ? "Today’s check-in has been sent. You can check in again tomorrow."
-      : missing.length
-        ? `Still to do: ${missing.join(" and ")}. You can still submit your vitals.`
-        : "Your vitals, photos and redressing go to your care team.";
   }
 
   // -- Step illustrations (inline SVG so they can animate and use tokens) --
