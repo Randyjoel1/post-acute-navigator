@@ -873,7 +873,10 @@
     </header>
     <div class="content">
       <img class="hero-img" src="assets/hospital-bayview.jpg" width="800" height="800" alt="The hospital’s main entrance, with palm trees and the bay behind it">
-      <h1 class="h-hero" data-bind="hospital">Bayview General Hospital</h1>
+      <div class="stack-8">
+        <h1 class="h-hero" data-bind="hospital">Bayview General Hospital</h1>
+        <p class="body-md" data-bind="address">2150 Harbor View Blvd. Bayview, FL. 33950</p>
+      </div>
       <div class="row" style="gap:12px">
         <span class="epic-tile"><img src="assets/epic.svg" width="18" height="18" alt=""></span>
         <p class="title-md">Uses the Bayview Health patient portal</p>
@@ -1532,8 +1535,8 @@
 <script>
 (() => {
   const HOSPITALS = [
-    { name: "Bayview General Hospital", city: "Bayview, FL." },
-    { name: "Bayview General Hospital Women's Health", city: "Bayview, FL." },
+    { name: "Bayview General Hospital", city: "Bayview, FL.", address: "2150 Harbor View Blvd. Bayview, FL. 33950" },
+    { name: "Bayview General Hospital Women's Health", city: "Bayview, FL.", address: "2150 Harbor View Blvd. Bayview, FL. 33950" },
   ];
   const screens = [...document.querySelectorAll(".screen")];
   const byName = Object.fromEntries(screens.map(s => [s.dataset.screen, s]));
@@ -1591,6 +1594,8 @@
   function setHospital(name) {
     state.hospital = name;
     document.querySelectorAll('[data-bind="hospital"]').forEach(n => n.textContent = name);
+    const h = HOSPITALS.find(h => h.name === name);
+    if (h) document.querySelectorAll('[data-bind="address"]').forEach(n => n.textContent = h.address);
   }
 
   // ---- Search ----
