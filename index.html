@@ -585,6 +585,12 @@
     transform: translateX(-100%); transition: transform .28s cubic-bezier(.2,.8,.2,1); pointer-events: auto;
   }
   .drawer-wrap.open .drawer { transform: none; }
+  /* Header row: title + close (391:11142) */
+  .drawer-head { padding: 12px 0; }
+  .drawer-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .drawer .drawer-title-row .h4 { line-height: 40px; }
+  .drawer-close { width: 40px; height: 40px; padding: 8px; }
+  .drawer-close:focus-visible { outline: 2px solid var(--border-primary-focus); outline-offset: 2px; }
   .drawer-wrap.open .drawer-scrim { opacity: 1; }
   /* Push the page behind the drawer, as in the Figma frame */
   .screen.pushed { transform: translateX(min(316px, 81%)); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
@@ -732,7 +738,8 @@
 
   /* ---- Dose chip: Take → Taken (499:2178 → 341:374) ---- */
   .dose-chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; }
-  .dose-chip.taken { background: var(--surface-success-subtle); border-color: var(--border-success-subtle); color: var(--text-success-default); cursor: default; }
+  .dose-chip.taken { background: var(--surface-success-subtle); border-color: var(--border-success-subtle); color: var(--text-success-default); }
+  .dose-chip.taken:hover { border-color: var(--border-success-default); }
   .dose-chip.taken svg { color: var(--icon-success-default); }
 
   /* ---- Prototype panel ---- */
@@ -1327,8 +1334,11 @@
   <div class="drawer-wrap" id="drawer" hidden>
     <div class="drawer-scrim" id="drawer-scrim"></div>
     <nav class="drawer" aria-label="Main menu" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
-      <div class="stack-8">
-        <h2 class="h4" id="drawer-title" tabindex="-1">Menu</h2>
+      <div class="stack-8 drawer-head">
+        <div class="drawer-title-row">
+          <h2 class="h4" id="drawer-title" tabindex="-1">Menu</h2>
+          <button class="icon-btn drawer-close" id="drawer-close" aria-label="Close menu"><img src="assets/clear.svg" width="24" height="24" alt=""></button>
+        </div>
         <p class="body-md">Here for you, <span data-bind="name">Martin</span>.<br>Let’s find what you need.</p>
       </div>
       <div class="menu-card">
@@ -2310,6 +2320,7 @@
   }
   menuBtn.addEventListener("click", openDrawer);
   document.getElementById("drawer-scrim").addEventListener("click", () => closeDrawer());
+  document.getElementById("drawer-close").addEventListener("click", () => closeDrawer());
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !drawer.hidden) closeDrawer(); });
   drawer.querySelectorAll("[data-menu]").forEach(b => b.addEventListener("click", () => {
     closeDrawer({ instant: true });
@@ -2395,19 +2406,22 @@
   // ---- Dashboard dose: Take → Taken ----
   const doseChip = document.getElementById("dose-take");
   const CHECK_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+  // Tapping Taken again undoes an accidental tap
   doseChip.addEventListener("click", () => {
-    if (doseChip.classList.contains("taken")) return;
+    if (doseChip.classList.contains("taken")) {
+      resetDose();
+      toast("Acetaminophen marked as not taken");
+      return;
+    }
     doseChip.classList.add("taken");
     doseChip.innerHTML = `Taken${CHECK_SVG}`;
-    doseChip.setAttribute("aria-label", "Acetaminophen taken");
-    doseChip.setAttribute("aria-disabled", "true");
+    doseChip.setAttribute("aria-label", "Acetaminophen taken. Tap to undo");
     showSuccess("Acetaminophen Taken");
   });
   function resetDose() {
     doseChip.classList.remove("taken");
     doseChip.textContent = "Take";
     doseChip.setAttribute("aria-label", "Take Acetaminophen");
-    doseChip.removeAttribute("aria-disabled");
     hideSuccess();
   }
 
