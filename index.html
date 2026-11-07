@@ -614,7 +614,8 @@
   .menu-item.feature .row { gap: 10px; }
 
   /* ---- Shared page bits ---- */
-  .eyebrow { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text-default-caption); }
+  .h6 { margin: 0; font-weight: 500; font-size: 20px; line-height: 32px; color: var(--text-default-default); } /* Headings/H6/medium */
+  .section-group { display: flex; flex-direction: column; gap: 12px; }
   .list-card { padding: 0; gap: 0; }
   .list-row {
     display: flex; align-items: center; gap: 12px; padding: 12px; width: 100%; text-align: left;
@@ -1376,23 +1377,27 @@
         <h1 class="h-hero">Your Care Team</h1>
         <p class="body-md">Familiar faces, here to help. Message them any time; replies usually come within a few hours.</p>
       </div>
-      <p class="eyebrow">On duty now</p>
-      <div class="card"><div class="row">
-        <img src="assets/circle-user.svg" width="40" height="40" alt="">
-        <div class="stack-4" style="flex:1"><p class="label-md">John Smith, RN</p><p class="body-md">Registered Nurse · Your main contact</p></div>
-        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging John Smith, RN (simulated)" aria-label="Message John Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
-      </div></div>
-      <p class="eyebrow">Your surgical team</p>
-      <div class="card"><div class="row">
-        <img src="assets/circle-user.svg" width="40" height="40" alt="">
-        <div class="stack-4" style="flex:1"><p class="label-md">Dr. Jane Smith</p><p class="body-md">Orthopedic Surgeon</p></div>
-        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Dr. Jane Smith (simulated)" aria-label="Message Dr. Jane Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
-      </div></div>
-      <div class="card"><div class="row">
-        <img src="assets/circle-user.svg" width="40" height="40" alt="">
-        <div class="stack-4" style="flex:1"><p class="label-md">Alex Rivera, PT</p><p class="body-md">Physical Therapist</p></div>
-        <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Alex Rivera, PT (simulated)" aria-label="Message Alex Rivera"><img src="assets/message.svg" width="24" height="24" alt=""></button>
-      </div></div>
+      <div class="section-group">
+        <h2 class="h6">On duty now</h2>
+        <div class="card"><div class="row">
+          <img src="assets/circle-user.svg" width="40" height="40" alt="">
+          <div class="stack-4" style="flex:1"><p class="label-md">John Smith, RN</p><p class="body-md">Registered Nurse · Your main contact</p></div>
+          <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging John Smith, RN (simulated)" aria-label="Message John Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+        </div></div>
+      </div>
+      <div class="section-group">
+        <h2 class="h6">Your surgical team</h2>
+        <div class="card"><div class="row">
+          <img src="assets/circle-user.svg" width="40" height="40" alt="">
+          <div class="stack-4" style="flex:1"><p class="label-md">Dr. Jane Smith</p><p class="body-md">Orthopedic Surgeon</p></div>
+          <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Dr. Jane Smith (simulated)" aria-label="Message Dr. Jane Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+        </div></div>
+        <div class="card"><div class="row">
+          <img src="assets/circle-user.svg" width="40" height="40" alt="">
+          <div class="stack-4" style="flex:1"><p class="label-md">Alex Rivera, PT</p><p class="body-md">Physical Therapist</p></div>
+          <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Alex Rivera, PT (simulated)" aria-label="Message Alex Rivera"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+        </div></div>
+      </div>
       <div class="notice">
         <p class="label-md">24/7 Urgent Hotline</p>
         <p class="alt" style="font-size:16px">Immediate medical triage in case of urgent help. For an emergency, call 911.</p>
@@ -1431,23 +1436,29 @@
         <h1 class="h-hero">Medical Records</h1>
         <p class="body-md">Synced from <span data-bind="hospital">Bayview General Hospital</span> · Updated today</p>
       </div>
-      <p class="eyebrow">Your surgery</p>
-      <div class="card list-card">
-        <button class="list-row" data-toast="Discharge summary viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Discharge Summary</span><span class="body-md">Oct 25, 2026 · Dr. Jane Smith</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <button class="list-row" data-toast="Care plan viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Care Plan</span><span class="body-md">Total Knee Arthroplasty</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <button class="list-row" data-toast="Operative note viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Operative Note</span><span class="body-md">Oct 23, 2026 · Right knee</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+      <div class="section-group">
+        <h2 class="h6">Your surgery</h2>
+        <div class="card list-card">
+          <button class="list-row" data-toast="Discharge summary viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Discharge Summary</span><span class="body-md">Oct 25, 2026 · Dr. Jane Smith</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <button class="list-row" data-toast="Care plan viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Care Plan</span><span class="body-md">Total Knee Arthroplasty</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <button class="list-row" data-toast="Operative note viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Operative Note</span><span class="body-md">Oct 23, 2026 · Right knee</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        </div>
       </div>
-      <p class="eyebrow">Medications</p>
-      <div class="card list-card">
-        <div class="list-row"><span class="stack-4"><span class="label-md">Acetaminophen (paracetamol)</span><span class="body-md">8:00 AM &amp; 8:00 PM · With food</span></span></div>
-        <div class="list-row"><span class="stack-4"><span class="label-md">Celecoxib</span><span class="body-md">As needed · Max 4 per day</span></span></div>
-        <div class="list-row"><span class="stack-4"><span class="label-md">Oxycodone</span><span class="body-md">As needed · Max 1 per day</span></span></div>
+      <div class="section-group">
+        <h2 class="h6">Medications</h2>
+        <div class="card list-card">
+          <div class="list-row"><span class="stack-4"><span class="label-md">Acetaminophen (paracetamol)</span><span class="body-md">8:00 AM &amp; 8:00 PM · With food</span></span></div>
+          <div class="list-row"><span class="stack-4"><span class="label-md">Celecoxib</span><span class="body-md">As needed · Max 4 per day</span></span></div>
+          <div class="list-row"><span class="stack-4"><span class="label-md">Oxycodone</span><span class="body-md">As needed · Max 1 per day</span></span></div>
+        </div>
       </div>
-      <p class="eyebrow">Results &amp; health details</p>
-      <div class="card list-card">
-        <button class="list-row" data-toast="Lab results viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Lab Results</span><span class="body-md">Complete blood count · Oct 24</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <button class="list-row" data-toast="Imaging viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Imaging</span><span class="body-md">Knee X-ray · Oct 24</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <div class="list-row"><span class="stack-4"><span class="label-md">Allergies</span><span class="body-md">Penicillin</span></span></div>
+      <div class="section-group">
+        <h2 class="h6">Results &amp; health details</h2>
+        <div class="card list-card">
+          <button class="list-row" data-toast="Lab results viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Lab Results</span><span class="body-md">Complete blood count · Oct 24</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <button class="list-row" data-toast="Imaging viewer isn’t designed yet"><span class="stack-4"><span class="label-md">Imaging</span><span class="body-md">Knee X-ray · Oct 24</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <div class="list-row"><span class="stack-4"><span class="label-md">Allergies</span><span class="body-md">Penicillin</span></span></div>
+        </div>
       </div>
     </div>
   </section>
@@ -1463,20 +1474,26 @@
         <h1 class="h-hero">Notifications</h1>
         <p class="body-md">Choose which alerts and reminders you get.</p>
       </div>
-      <p class="eyebrow">Reminders</p>
-      <div class="card list-card">
-        <label class="list-row"><span class="stack-4"><span class="label-md">Medication reminders</span><span class="body-md">At each scheduled dose</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Medication reminders"><span></span></span></label>
-        <label class="list-row"><span class="stack-4"><span class="label-md">Daily check-in</span><span class="body-md">Every day at 9:00 AM</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Daily check-in reminders"><span></span></span></label>
-        <label class="list-row"><span class="stack-4"><span class="label-md">Appointment reminders</span><span class="body-md">1 day and 2 hours before</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Appointment reminders"><span></span></span></label>
+      <div class="section-group">
+        <h2 class="h6">Reminders</h2>
+        <div class="card list-card">
+          <label class="list-row"><span class="stack-4"><span class="label-md">Medication reminders</span><span class="body-md">At each scheduled dose</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Medication reminders"><span></span></span></label>
+          <label class="list-row"><span class="stack-4"><span class="label-md">Daily check-in</span><span class="body-md">Every day at 9:00 AM</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Daily check-in reminders"><span></span></span></label>
+          <label class="list-row"><span class="stack-4"><span class="label-md">Appointment reminders</span><span class="body-md">1 day and 2 hours before</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Appointment reminders"><span></span></span></label>
+        </div>
       </div>
-      <p class="eyebrow">Updates</p>
-      <div class="card list-card">
-        <label class="list-row"><span class="stack-4"><span class="label-md">Care team messages</span><span class="body-md">When your team replies</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Care team messages"><span></span></span></label>
-        <label class="list-row"><span class="stack-4"><span class="label-md">Recovery tips</span><span class="body-md">A short tip each morning</span></span><span class="switch"><input type="checkbox" role="switch" data-note="Recovery tips"><span></span></span></label>
+      <div class="section-group">
+        <h2 class="h6">Updates</h2>
+        <div class="card list-card">
+          <label class="list-row"><span class="stack-4"><span class="label-md">Care team messages</span><span class="body-md">When your team replies</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Care team messages"><span></span></span></label>
+          <label class="list-row"><span class="stack-4"><span class="label-md">Recovery tips</span><span class="body-md">A short tip each morning</span></span><span class="switch"><input type="checkbox" role="switch" data-note="Recovery tips"><span></span></span></label>
+        </div>
       </div>
-      <p class="eyebrow">Quiet hours</p>
-      <div class="card list-card">
-        <label class="list-row"><span class="stack-4"><span class="label-md">Pause non-urgent alerts</span><span class="body-md">10:00 PM – 7:00 AM. Medication reminders still come through.</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Quiet hours"><span></span></span></label>
+      <div class="section-group">
+        <h2 class="h6">Quiet hours</h2>
+        <div class="card list-card">
+          <label class="list-row"><span class="stack-4"><span class="label-md">Pause non-urgent alerts</span><span class="body-md">10:00 PM – 7:00 AM. Medication reminders still come through.</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Quiet hours"><span></span></span></label>
+        </div>
       </div>
     </div>
   </section>
@@ -1492,22 +1509,28 @@
         <span class="avatar" aria-hidden="true" data-bind="initial">M</span>
         <div class="stack-4" style="flex:1"><p class="label-md" data-bind="name">Martin</p><p class="body-md">Patient at <span data-bind="hospital">Bayview General Hospital</span></p></div>
       </div></div>
-      <p class="eyebrow">Profile</p>
-      <div class="card list-card">
-        <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Phone</span><span class="body-md">(555) 010-0142</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Email</span><span class="body-md">martin@example.com</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Emergency contact</span><span class="body-md">Add someone we can reach</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+      <div class="section-group">
+        <h2 class="h6">Profile</h2>
+        <div class="card list-card">
+          <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Phone</span><span class="body-md">(555) 010-0142</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Email</span><span class="body-md">martin@example.com</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <button class="list-row" data-toast="Editing isn’t designed yet"><span class="stack-4"><span class="label-md">Emergency contact</span><span class="body-md">Add someone we can reach</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        </div>
       </div>
-      <p class="eyebrow">Connected hospital</p>
-      <div class="card list-card">
-        <div class="list-row"><span class="epic-tile"><img src="assets/epic.svg" width="18" height="18" alt=""></span><span class="stack-4"><span class="label-md" data-bind="hospital">Bayview General Hospital</span><span class="body-md">Patient portal access · Expires in 90 days</span></span></div>
-        <button class="list-row" data-toast="Access management isn’t designed yet"><span class="stack-4"><span class="label-md">Manage access</span><span class="body-md">See or revoke what this app can read</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+      <div class="section-group">
+        <h2 class="h6">Connected hospital</h2>
+        <div class="card list-card">
+          <div class="list-row"><span class="epic-tile"><img src="assets/epic.svg" width="18" height="18" alt=""></span><span class="stack-4"><span class="label-md" data-bind="hospital">Bayview General Hospital</span><span class="body-md">Patient portal access · Expires in 90 days</span></span></div>
+          <button class="list-row" data-toast="Access management isn’t designed yet"><span class="stack-4"><span class="label-md">Manage access</span><span class="body-md">See or revoke what this app can read</span></span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+        </div>
       </div>
-      <p class="eyebrow">Preferences &amp; security</p>
-      <div class="card list-card">
-        <button class="list-row" data-toast="Language picker isn’t designed yet"><span class="stack-4"><span class="label-md">Language</span></span><span class="value">English</span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <button class="list-row" data-toast="Text size picker isn’t designed yet"><span class="stack-4"><span class="label-md">Text size</span></span><span class="value">Default</span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
-        <label class="list-row"><span class="stack-4"><span class="label-md">Unlock with Face ID</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Face ID unlock"><span></span></span></label>
+      <div class="section-group">
+        <h2 class="h6">Preferences &amp; security</h2>
+        <div class="card list-card">
+          <button class="list-row" data-toast="Language picker isn’t designed yet"><span class="stack-4"><span class="label-md">Language</span></span><span class="value">English</span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <button class="list-row" data-toast="Text size picker isn’t designed yet"><span class="stack-4"><span class="label-md">Text size</span></span><span class="value">Default</span><img src="assets/chevron-right.svg" width="24" height="24" alt=""></button>
+          <label class="list-row"><span class="stack-4"><span class="label-md">Unlock with Face ID</span></span><span class="switch"><input type="checkbox" role="switch" checked data-note="Face ID unlock"><span></span></span></label>
+        </div>
       </div>
       <button class="btn btn-outline" data-logout>Log Out</button>
       <p class="body-md" style="text-align:center;font-size:14px;line-height:20px;color:var(--text-default-caption)">Post-Acute Navigator · Version 1.0 (prototype)</p>
