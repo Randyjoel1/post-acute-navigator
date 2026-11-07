@@ -740,7 +740,11 @@
   @media (prefers-reduced-motion: reduce) { .success-toast, .success-toast.show { transition: none; transform: none; } }
 
   /* ---- Dose chip: Take → Taken (499:2178 → 341:374) ---- */
-  .dose-chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; }
+  .dose-chip { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+  .dose-list { display: flex; flex-direction: column; }
+  .dose-row { overflow: hidden; }
+  .dose-row:not(:last-child) { border-bottom: 1px solid var(--border-default-default); padding-bottom: 10px; margin-bottom: 10px; }
+  .dose-row-inner { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
   .dose-chip.taken { background: var(--surface-success-subtle); border-color: var(--border-success-subtle); color: var(--text-success-default); }
   .dose-chip.taken:hover { border-color: var(--border-success-default); }
   .dose-chip.taken svg { color: var(--icon-success-default); }
@@ -1152,12 +1156,11 @@
         <button class="btn btn-filled" data-go="checkin" id="dash-checkin-btn">Start Check-In</button>
       </div>
       <div class="card">
-        <div class="row-8" style="align-items:center"><img src="assets/clock.svg" width="24" height="24" alt=""><p class="label-md">Next Dose 8:00 PM</p></div>
         <div class="stack-4">
-          <p class="body-md">Acetaminophen (paracetamol)</p>
-          <p class="label-md" style="color:var(--text-default-secondary)">With food · 2 of 2 today</p>
+          <p class="label-md">Acetaminophen (paracetamol)</p>
+          <p class="body-md" id="dose-count">With food · 1 of 2 today</p>
+          <div class="dose-list" id="dose-list"></div>
         </div>
-        <button class="chip dose-chip" id="dose-take" aria-label="Take Acetaminophen">Take</button>
       </div>
       <div class="card">
         <div class="stack-4"><p class="label-md">Next Follow-Up</p><p class="body-md">October 29, 2026</p></div>
@@ -2396,25 +2399,59 @@
   function hideSuccess() { clearTimeout(successTimer); successToast.classList.remove("show"); }
   document.getElementById("success-toast-close").addEventListener("click", hideSuccess);
 
-  // ---- Dashboard dose: Take → Taken ----
-  const doseChip = document.getElementById("dose-take");
+  // ---- Dashboard doses (499:2178 → 341:374) ----
+  // Taking a dose turns its row into "Dose … Taken" and slides the next dose in above it.
+  // Tapping Taken undoes that dose and any taken after it.
+  const DOSES = ["8:00 AM", "8:00 PM"];
   const CHECK_SVG = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-  // Tapping Taken again undoes an accidental tap
-  doseChip.addEventListener("click", () => {
-    if (doseChip.classList.contains("taken")) {
-      resetDose();
-      toast("Acetaminophen marked as not taken");
-      return;
-    }
-    doseChip.classList.add("taken");
-    doseChip.innerHTML = `Taken${CHECK_SVG}`;
-    doseChip.setAttribute("aria-label", "Acetaminophen taken. Tap to undo");
-    showSuccess("Acetaminophen Taken");
+  const doseList = document.getElementById("dose-list");
+  const doseRows = DOSES.map((time, i) => {
+    const row = document.createElement("div");
+    row.className = "dose-row";
+    row.innerHTML = `<div class="dose-row-inner"><div class="row-8" style="align-items:center"><img src="assets/clock.svg" width="24" height="24" alt=""><p class="label-md"></p></div><button class="chip dose-chip"></button></div>`;
+    row.querySelector("button").addEventListener("click", () => {
+      if (i < dosesTaken) {
+        setDoses(i, true);
+        toast(`${time} Acetaminophen marked as not taken`);
+      } else {
+        setDoses(i + 1, true);
+        showSuccess("Acetaminophen Taken");
+      }
+    });
+    return row;
   });
+  let dosesTaken = 0;
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  function animateRow(row, entering) {
+    if (reduceMotion.matches) { if (!entering) row.remove(); return; }
+    const cs = getComputedStyle(row);
+    const open = { height: row.offsetHeight + "px", marginBottom: cs.marginBottom, paddingBottom: cs.paddingBottom, opacity: 1, transform: "none" };
+    const closed = { height: "0px", marginBottom: "0px", paddingBottom: "0px", opacity: 0, transform: "translateY(-8px)" };
+    const anim = row.animate(entering ? [closed, open] : [open, closed], { duration: 320, easing: "cubic-bezier(.2,0,0,1)" });
+    if (!entering) { row.exiting = anim; anim.onfinish = () => { row.exiting = null; row.remove(); }; }
+  }
+  function setDoses(n, animate) {
+    dosesTaken = n;
+    const shown = Math.min(n + 1, DOSES.length);
+    document.getElementById("dose-count").textContent = `With food · ${shown} of ${DOSES.length} today`;
+    doseRows.forEach((row, i) => {
+      const taken = i < n, time = DOSES[i], chip = row.querySelector("button");
+      row.querySelector("p").textContent = taken ? `Dose ${time}` : `Next Dose ${time}`;
+      chip.classList.toggle("taken", taken);
+      chip.innerHTML = taken ? `Taken${CHECK_SVG}` : "Take";
+      chip.setAttribute("aria-label", taken ? `${time} dose taken. Tap to undo` : `Take ${time} dose of Acetaminophen`);
+      if (i < shown && row.exiting) { row.exiting.cancel(); row.exiting = null; } // re-taken mid-exit
+      else if (i < shown && !row.isConnected) {
+        doseList.prepend(row); // newest dose on top
+        if (animate) animateRow(row, true);
+      } else if (i >= shown && row.isConnected && !row.exiting) {
+        if (animate) animateRow(row, false); else row.remove();
+      }
+    });
+  }
+  setDoses(0, false);
   function resetDose() {
-    doseChip.classList.remove("taken");
-    doseChip.textContent = "Take";
-    doseChip.setAttribute("aria-label", "Take Acetaminophen");
+    setDoses(0, false);
     hideSuccess();
   }
 
