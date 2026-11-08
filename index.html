@@ -233,6 +233,8 @@
     border-radius: 12px; padding: 12px;
     display: flex; flex-direction: column; gap: 8px;
   }
+  .notice.hotline { border-color: var(--border-default-default); border-radius: 8px; padding: 16px; }
+  .notice.hotline p.alt { font-size: 16px; color: var(--text-default-default); }
   .notice p.alt { margin: 0; font-size: 15px; line-height: 24px; color: var(--design-body-alt); }
   .card {
     background: var(--surface-default-default);
@@ -627,30 +629,37 @@
   .list-row + .list-row { border-top: 1px solid var(--border-default-default); }
   .list-row .stack-4 { flex: 1; min-width: 0; }
   .list-row .value { font-size: 16px; line-height: 24px; color: var(--text-default-secondary); text-align: right; }
+  /* Badge (Figma Badge: neutral fill, intent-colored label) */
   .pill {
-    display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 100px;
-    font-size: 14px; line-height: 20px; font-weight: 600; border: 1px solid; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 8px;
+    font-size: 14px; line-height: 20px; font-weight: 600; white-space: nowrap;
+    background: var(--surface-default-secondary); border: 1px solid var(--border-default-default); color: var(--text-default-default);
   }
-  .pill.ok { color: var(--text-success-default); border-color: var(--border-success-default); }
-  .pill.warn { color: var(--text-warning-default); border-color: var(--border-warning-default); }
-  .pill.missed { color: var(--text-default-secondary); border-color: var(--border-default-default-hover); }
-  .pill svg { flex-shrink: 0; }
+  .pill.ok { color: var(--text-success-default); }
+  .pill.warn { color: var(--text-warning-default); }
   .avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--surface-primary-subtle); display: grid; place-items: center; flex-shrink: 0; font-weight: 600; font-size: 20px; color: var(--text-primary-default); }
 
   /* History */
-  .history-card { gap: 12px; }
-  .history-card summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .history-card { gap: 10px; }
+  .history-card summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
   .history-card summary::-webkit-details-marker { display: none; }
-  .history-card summary img { transition: transform .2s; }
-  .history-card[open] summary img { transform: rotate(90deg); }
+  .history-card summary > img { transition: transform .2s; flex-shrink: 0; }
+  .history-card[open] summary > img { transform: rotate(90deg); }
   .history-card summary:focus-visible { outline: 2px solid var(--border-default-focus); outline-offset: 4px; border-radius: 4px; }
-  .vitals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
-  .vitals-grid div { background: var(--surface-default-secondary); border-radius: 8px; padding: 8px; }
-  .vitals-grid small { display: block; font-size: 12px; line-height: 16px; color: var(--text-default-caption); }
-  .vitals-grid b { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--text-default-default); }
-  .vitals-grid b.flag { color: var(--text-warning-default); display: inline-flex; align-items: center; gap: 4px; }
+  .history-card .stack-4 { flex: 1; min-width: 0; }
+  .history-card .rule { height: 1px; background: var(--border-default-default); margin-top: 10px; }
+  .history-summary { display: flex; align-items: center; gap: 12px; }
+  .history-summary > div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .history-summary .v-divider { flex: 0 0 1px; height: 48px; background: var(--border-default-default); }
+  .vitals-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .vitals-list > hr { margin: 0; border: 0; height: 1px; background: var(--border-default-default); }
+  .vital { display: flex; flex-direction: column; gap: 2px; }
+  .vital b { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--text-default-default); }
+  .vital b.flag { color: var(--text-warning-default); display: inline-flex; align-items: center; gap: 4px; }
+  .vital .flag-note { color: var(--text-warning-default); }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .history-meta { margin: 12px 0 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 20px; color: var(--text-default-secondary); }
+  .history-meta { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 16px; line-height: 24px; color: var(--text-default-secondary); }
+  .history-meta li::before { content: "•\00a0\00a0"; }
 
   /* Switch */
   .switch { position: relative; width: 52px; height: 32px; flex-shrink: 0; }
@@ -1382,7 +1391,7 @@
         <div class="card"><div class="row">
           <img src="assets/circle-user.svg" width="40" height="40" alt="">
           <div class="stack-4" style="flex:1"><p class="label-md">John Smith, RN</p><p class="body-md">Registered Nurse · Your main contact</p></div>
-          <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging John Smith, RN (simulated)" aria-label="Message John Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+          <button class="icon-btn" style="width:40px;height:40px;padding:8px" data-toast="Messaging John Smith, RN (simulated)" aria-label="Message John Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
         </div></div>
       </div>
       <div class="section-group">
@@ -1390,17 +1399,17 @@
         <div class="card"><div class="row">
           <img src="assets/circle-user.svg" width="40" height="40" alt="">
           <div class="stack-4" style="flex:1"><p class="label-md">Dr. Jane Smith</p><p class="body-md">Orthopedic Surgeon</p></div>
-          <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Dr. Jane Smith (simulated)" aria-label="Message Dr. Jane Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+          <button class="icon-btn" style="width:40px;height:40px;padding:8px" data-toast="Messaging Dr. Jane Smith (simulated)" aria-label="Message Dr. Jane Smith"><img src="assets/message.svg" width="24" height="24" alt=""></button>
         </div></div>
         <div class="card"><div class="row">
           <img src="assets/circle-user.svg" width="40" height="40" alt="">
           <div class="stack-4" style="flex:1"><p class="label-md">Alex Rivera, PT</p><p class="body-md">Physical Therapist</p></div>
-          <button class="icon-btn" style="width:48px;height:48px;padding:12px" data-toast="Messaging Alex Rivera, PT (simulated)" aria-label="Message Alex Rivera"><img src="assets/message.svg" width="24" height="24" alt=""></button>
+          <button class="icon-btn" style="width:40px;height:40px;padding:8px" data-toast="Messaging Alex Rivera, PT (simulated)" aria-label="Message Alex Rivera"><img src="assets/message.svg" width="24" height="24" alt=""></button>
         </div></div>
       </div>
-      <div class="notice">
+      <div class="notice hotline">
         <p class="label-md">24/7 Urgent Hotline</p>
-        <p class="alt" style="font-size:16px">Immediate medical triage in case of urgent help. For an emergency, call 911.</p>
+        <p class="alt">Immediate medical triage in case of urgent help. For an emergency, call 911.</p>
         <button class="btn btn-outline" data-call>1-800-555-0199</button>
       </div>
     </div>
@@ -1417,10 +1426,11 @@
         <h1 class="h-hero">Check-In History</h1>
         <p class="body-md">Review your past check-ins. Tap a day to see what you sent.</p>
       </div>
-      <div class="card list-card" style="flex-direction:row;padding:0">
-        <div class="list-row" style="flex-direction:column;align-items:flex-start;gap:0"><span class="body-md">This week</span><span class="h5" style="font-weight:500" id="hist-streak">3 of 3 days</span></div>
-        <div class="list-row" style="flex-direction:column;align-items:flex-start;gap:0;border-top:0;border-left:1px solid var(--border-default-default)"><span class="body-md">Flagged for review</span><span class="h5" style="font-weight:500" id="hist-flags">1</span></div>
-      </div>
+      <div class="card"><div class="history-summary">
+        <div><span class="body-md">This week</span><span class="h6" id="hist-streak">3 of 3 days</span></div>
+        <span class="v-divider" aria-hidden="true"></span>
+        <div><span class="body-md">Flagged for review</span><span class="h6" id="hist-flags">1</span></div>
+      </div></div>
       <div id="history-list" style="display:flex;flex-direction:column;gap:12px"></div>
     </div>
   </section>
@@ -2352,43 +2362,50 @@
   }));
 
   // ==== Check-in history ====
-  const ICON_OK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-  const ICON_WARN = WARN_ICON.replace('width="16" height="16"', 'width="14" height="14"');
+  const ICON_ALERT = '<img src="assets/circle-alert.svg" width="16" height="16" alt="">';
   const CHEVRON = '<img src="assets/chevron-right.svg" width="24" height="24" alt="">';
   const dayLabel = offset => {
     const d = new Date(); d.setDate(d.getDate() - offset);
     return offset === 0 ? "Today" : offset === 1 ? "Yesterday" : d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
   };
+  // Today/Yesterday add the date to the subtitle; older days already show it in the title
+  const daySub = (offset, recovery) => {
+    const d = new Date(); d.setDate(d.getDate() - offset);
+    return `Recovery Day ${recovery}` + (offset < 2 ? ` · ${d.toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "");
+  };
   // Flagged values get an icon and hidden text, not just color
-  const fv = (flag, val) => flag ? `<b class="flag">${ICON_WARN} ${val}<span class="sr-only"> (outside expected range)</span></b>` : `<b>${val}</b>`;
+  const vital = (label, flag, val, note = "Above expected range") => `<div class="vital"><span class="body-md">${label}</span>${flag
+    ? `<b class="flag">${ICON_ALERT}${val}</b><span class="body-md flag-note">${note}</span>`
+    : `<b>${val}</b>`}</div>`;
   function renderHistory() {
     const v = Object.fromEntries(VITALS.map(x => [x.id, x]));
     const todayFlag = checkin.done && (checkin.concern || VITALS.some(x => x.el.classList.contains("out-of-range")));
     const entries = [
       checkin.done
         ? { day: 0, recovery: 3, status: todayFlag ? "warn" : "ok",
-            temp: vitalText(v.temp), hr: vitalText(v.hr), bp: `${vitalText(v.sys)}/${vitalText(v.dia)}`,
-            flags: VITALS.filter(x => x.el.classList.contains("out-of-range")).map(x => x.id),
+            temp: vitalText(v.temp), hr: isEmpty(v.hr) ? "–" : `${vitalText(v.hr)} bpm`, bp: `${vitalText(v.sys)}/${vitalText(v.dia)}`,
+            flags: VITALS.filter(x => x.el.classList.contains("out-of-range")).map(x => x.id), note: "Outside expected range",
             meta: [...(checkin.missing?.length ? [`Not logged: ${checkin.missing.join(", ")}`] : []), `${checkin.photos} incision photo${checkin.photos === 1 ? "" : "s"}`, checkin.redressed ? "Incision redressed" : "Redressing not logged", ...(checkin.reason ? [`Reason for missing items: ${checkin.reason}`] : []),
               ...(checkin.concern ? ["You reported a possible sign of infection"] : [])] }
         : { day: 0, recovery: 3, status: "due" },
-      { day: 1, recovery: 2, status: "ok", temp: "99.1°F", hr: 84, bp: "118/72", flags: [], meta: ["1 incision photo", "Incision redressed"] },
-      { day: 2, recovery: 1, status: "warn", temp: "100.6°F", hr: 92, bp: "124/78", flags: ["temp"],
+      { day: 1, recovery: 2, status: "ok", temp: "99.1°F", hr: "84 bpm", bp: "118/72", flags: [], meta: ["1 incision photo", "Incision redressed"] },
+      { day: 2, recovery: 1, status: "warn", temp: "100.6°F", hr: "92 bpm", bp: "124/78", flags: ["temp"],
         meta: ["2 incision photos", "Incision redressed", "John Smith, RN called you back at 2:15 PM"] },
     ];
-    const pill = s => s === "ok" ? `<span class="pill ok">${ICON_OK}Sent</span>`
-      : s === "warn" ? `<span class="pill warn">${ICON_WARN}Reviewed</span>`
-      : `<span class="pill missed">Due today</span>`;
+    const pill = s => s === "ok" ? `<span class="pill ok">Sent</span>`
+      : s === "warn" ? `<span class="pill warn">Reviewed</span>`
+      : `<span class="pill">Due Today</span>`;
     document.getElementById("history-list").innerHTML = entries.map(e => e.status === "due"
-      ? `<div class="card history-card"><div class="row" style="justify-content:space-between"><div class="stack-4"><p class="label-md">${dayLabel(e.day)}</p><p class="body-md">Recovery Day ${e.recovery}</p></div>${pill("due")}</div>
+      ? `<div class="card history-card"><div class="row" style="gap:8px"><div class="stack-4"><p class="label-md">${dayLabel(e.day)}</p><p class="body-md">${daySub(e.day, e.recovery)}</p></div>${pill("due")}</div>
           <button class="btn btn-filled" data-go="checkin">Start Today’s Check-In</button></div>`
-      : `<details class="card history-card" ${e.day === 0 ? "open" : ""}>
-          <summary><span class="stack-4"><span class="label-md">${dayLabel(e.day)}</span><span class="body-md">Recovery Day ${e.recovery}</span></span>
-            <span class="row" style="gap:8px">${pill(e.status)}${CHEVRON}</span></summary>
-          <div class="vitals-grid">
-            <div><small>Temperature</small>${fv(e.flags.includes("temp"), e.temp)}</div>
-            <div><small>Heart rate</small>${fv(e.flags.includes("hr"), e.hr)}</div>
-            <div><small>Blood pressure</small>${fv(e.flags.some(f => f === "sys" || f === "dia"), e.bp)}</div>
+      : `<details class="card history-card" ${e.day === 0 || e.status === "warn" ? "open" : ""}>
+          <summary><span class="stack-4"><span class="label-md">${dayLabel(e.day)}</span><span class="body-md">${daySub(e.day, e.recovery)}</span></span>
+            ${pill(e.status)}${CHEVRON}</summary>
+          <div class="rule"></div>
+          <div class="vitals-list">
+            ${vital("Temperature", e.flags.includes("temp"), e.temp, e.note)}<hr>
+            ${vital("Heart rate", e.flags.includes("hr"), e.hr, e.note)}<hr>
+            ${vital("Blood pressure", e.flags.some(f => f === "sys" || f === "dia"), e.bp, e.note)}
           </div>
           <ul class="history-meta">${e.meta.map(m => `<li>${m}</li>`).join("")}</ul>
         </details>`).join("");
